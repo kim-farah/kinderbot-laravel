@@ -40,4 +40,16 @@ class ActivityController extends Controller
 
         return redirect()->route('coordinator')->with('success', 'Activity created successfully!');
     }
+
+    // ADD THIS METHOD
+    public function index()
+    {
+        $activities = DB::table('activities')
+            ->join('classes', 'activities.class_id', '=', 'classes.id')
+            ->select('activities.*', 'classes.name as class_name')
+            ->orderBy('activities.created_at', 'desc')
+            ->get();
+
+        return response()->json($activities);
+    }
 }

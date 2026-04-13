@@ -13,6 +13,7 @@ class ClassSeeder extends Seeder
             [
                 'name' => 'KG1',
                 'grade_level' => 0,
+                'age_range' => 'Ages 3-4',
                 'program_id' => 1,
                 'is_active' => true,
                 'created_at' => now(),
@@ -21,6 +22,7 @@ class ClassSeeder extends Seeder
             [
                 'name' => 'KG2',
                 'grade_level' => 1,
+                'age_range' => 'Ages 4-5',
                 'program_id' => 1,
                 'is_active' => true,
                 'created_at' => now(),
@@ -29,6 +31,7 @@ class ClassSeeder extends Seeder
             [
                 'name' => 'KG3',
                 'grade_level' => 2,
+                'age_range' => 'Ages 5-6',
                 'program_id' => 1,
                 'is_active' => true,
                 'created_at' => now(),

@@ -256,6 +256,7 @@
                         <li data-page="classes">📚 Classes</li>
                         <li data-page="teachers">👥 Teachers</li>
                         <li data-page="parents">👨‍👩‍👧 Parents</li>
+                        <li data-page="students">👧 Students</li>
                         <li data-page="activities">📝 Activities</li>
                         <li data-page="settings">⚙️ Settings</li>
                     </ul>
@@ -282,6 +283,10 @@
                     <div class="section-header"><h2>Parents</h2><button class="btn-primary" id="newParentBtn">+ New Parent</button></div>
                     <div id="parentsTableContainer" class="data-table"></div>
                 </div>
+                <div id="studentsPage" class="page-content">
+                    <div class="section-header"><h2>Students</h2><button class="btn-primary" id="newStudentBtn">+ New Student</button></div>
+                    <div id="studentsTableContainer" class="data-table"></div>
+                </div>
                 <div id="activitiesPage" class="page-content">
                     <div class="section-header"><h2>All Activities</h2><button class="btn-primary" id="newActivityBtn2">+ New Activity</button></div>
                     <div id="activitiesTableContainer" class="data-table"></div>
@@ -299,21 +304,44 @@
         </div>
     </div>
 
+    <!-- Modals -->
     <div id="sectionsModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 id="modalClassName">Class Sections</h3><button class="modal-close" onclick="closeSectionsModal()">&times;</button></div><div class="modal-body" id="sectionsModalBody"></div></div></div>
     <div id="addSectionModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Add New Section</h3><button class="modal-close" onclick="closeAddSectionModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Section Name</label><input type="text" id="newSectionName" placeholder="e.g., A, B, Morning" class="form-input"></div><div class="form-group"><label>Teacher</label><select id="newSectionTeacher" class="form-select"></select></div><div class="form-group"><label>Max Students</label><input type="number" id="newSectionMaxStudents" value="25" class="form-input"></div><div class="form-group"><label>Schedule</label><input type="text" id="newSectionSchedule" placeholder="e.g., 9:00-10:30 AM" class="form-input"></div><div class="form-actions"><button class="btn-secondary" onclick="closeAddSectionModal()">Cancel</button><button class="btn-primary" onclick="saveNewSection()">Add Section</button></div></div></div></div>
-    <div id="addStudentModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Add Student</h3><button class="modal-close" onclick="closeAddStudentModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Student Name</label><input type="text" id="newStudentName" class="form-input" placeholder="Full name"></div><div class="form-group"><label>Parent Name (optional)</label><input type="text" id="newStudentParent" class="form-input" placeholder="Parent name"></div><div class="form-actions"><button class="btn-secondary" onclick="closeAddStudentModal()">Cancel</button><button class="btn-primary" onclick="saveNewStudent()">Add Student</button></div></div></div></div>
+
+    <!-- Add Student to Section Modal -->
+    <div id="addStudentToSectionModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Add Student to Section</h3><button class="modal-close" onclick="closeAddStudentToSectionModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Select Student</label><select id="existingStudentId" class="form-select"><option value="">-- Select Student --</option></select></div><div class="form-actions"><button class="btn-secondary" onclick="closeAddStudentToSectionModal()">Cancel</button><button class="btn-primary" onclick="saveExistingStudent()">Add Student</button></div></div></div></div>
+
+    <!-- Add New Student Modal -->
+    <div id="newStudentModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Add New Student</h3><button class="modal-close" onclick="closeNewStudentModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Student Name</label><input type="text" id="newStudentName" class="form-input" placeholder="Full name"></div><div class="form-group"><label>Date of Birth</label><input type="date" id="newStudentDob" class="form-input"><small style="color:gray;">Age will be calculated automatically</small></div><div class="form-group"><label>Parent</label><select id="newStudentParentId" class="form-select"><option value="">-- Select Parent --</option></select></div><div class="form-actions"><button class="btn-secondary" onclick="closeNewStudentModal()">Cancel</button><button class="btn-primary" onclick="saveNewStudentRecord()">Save Student</button></div></div></div></div>
+
+    <!-- Edit Modals -->
     <div id="editClassModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Edit Class</h3><button class="modal-close" onclick="closeEditClassModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Class Name</label><input type="text" id="editClassName" class="form-input"></div><div class="form-group"><label>Age Range</label><input type="text" id="editClassGrade" class="form-input"></div><div class="form-group"><label>Teacher</label><input type="text" id="editClassTeacher" class="form-input"></div><div class="form-actions"><button class="btn-secondary" onclick="closeEditClassModal()">Cancel</button><button class="btn-primary" onclick="saveEditedClass()">Save</button></div></div></div></div>
     <div id="editTeacherModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Edit Teacher</h3><button class="modal-close" onclick="closeEditTeacherModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Name</label><input type="text" id="editTeacherName" class="form-input"></div><div class="form-group"><label>Email</label><input type="email" id="editTeacherEmail" class="form-input"></div><div class="form-group"><label>Phone</label><input type="text" id="editTeacherPhone" class="form-input"></div><div class="form-group"><label>Class</label><input type="text" id="editTeacherClass" class="form-input"></div><div class="form-actions"><button class="btn-secondary" onclick="closeEditTeacherModal()">Cancel</button><button class="btn-primary" onclick="saveEditedTeacher()">Save</button></div></div></div></div>
     <div id="editParentModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Edit Parent</h3><button class="modal-close" onclick="closeEditParentModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Name</label><input type="text" id="editParentName" class="form-input"></div><div class="form-group"><label>Email</label><input type="email" id="editParentEmail" class="form-input"></div><div class="form-group"><label>Phone</label><input type="text" id="editParentPhone" class="form-input"></div><div class="form-group"><label>Child</label><input type="text" id="editParentChild" class="form-input"></div><div class="form-actions"><button class="btn-secondary" onclick="closeEditParentModal()">Cancel</button><button class="btn-primary" onclick="saveEditedParent()">Save</button></div></div></div></div>
     <div id="editActivityModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Edit Activity</h3><button class="modal-close" onclick="closeEditActivityModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Title</label><input type="text" id="editActivityTitle" class="form-input"></div><div class="form-group"><label>Class</label><select id="editActivityClass" class="form-select"><option>KG1</option><option>KG2</option><option>KG3</option></select></div><div class="form-group"><label>Duration (min)</label><input type="number" id="editActivityDuration" class="form-input"></div><div class="form-group"><label>Difficulty</label><select id="editActivityDifficulty" class="form-select"><option>Easy</option><option>Medium</option><option>Hard</option></select></div><div class="form-group"><label>Status</label><select id="editActivityStatus" class="form-select"><option value="published">Published</option><option value="draft">Draft</option></select></div><div class="form-actions"><button class="btn-secondary" onclick="closeEditActivityModal()">Cancel</button><button class="btn-primary" onclick="saveEditedActivity()">Save</button></div></div></div></div>
 
+        <!-- Edit Student Modal -->
+    <div id="editStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Student</h3>
+                <button class="modal-close" onclick="closeEditStudentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editStudentId">
+                <div class="form-group"><label>Student Name</label><input type="text" id="editStudentName" class="form-input"></div>
+                <div class="form-group"><label>Date of Birth</label><input type="date" id="editStudentDob" class="form-input"></div>
+                <div class="form-group"><label>Parent</label><select id="editStudentParentId" class="form-select"></select></div>
+                <div class="form-actions"><button class="btn-secondary" onclick="closeEditStudentModal()">Cancel</button><button class="btn-primary" onclick="updateStudentRecord()">Save Changes</button></div>
+            </div>
+        </div>
+    </div>
     <script>
     // Get data from Laravel backend
     const classesData = @json($classes);
     const activitiesData = @json($activities);
     const teacherLogData = @json($teacherLog);
 
-    // Global variables for sections
     let currentClassId = null;
     let currentSectionId = null;
 
@@ -333,153 +361,184 @@
         return { text: `${diffDays} days ago`, class: "old" };
     }
 
-    // Display classes from database with real student counts
-function displayClassesDashboard() {
-    const container = document.getElementById('classCardsContainer');
-    if (!container) return;
+    // ==================== CLASS FUNCTIONS ====================
 
-    if (classesData.length === 0) {
-        container.innerHTML = '<p style="text-align: center; padding: 40px;">No classes yet. Click "+ New Class" to create one.</p>';
-        return;
+    function displayClassesDashboard() {
+        const container = document.getElementById('classCardsContainer');
+        if (!container) return;
+        container.innerHTML = '<p style="text-align: center; padding: 40px;">Loading classes...</p>';
+        fetch('/api/classes-with-details')
+            .then(response => response.json())
+            .then(classesWithData => {
+                if (classesWithData.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; padding: 40px;">No classes yet. Click "+ New Class" to create one.</p>';
+                    return;
+                }
+                container.innerHTML = classesWithData.map(c => `
+                    <div class="card">
+                        <h3>${c.name}</h3>
+                        <div class="grade">${c.age_range || 'Age range not set'}</div>
+                        <div class="stats">👥 ${c.totalStudents} students</div>
+                        <div class="sections" style="font-size: 12px; color: var(--gray); margin: 8px 0;">📚 Sections: ${c.sectionsList || 'None'}</div>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button class="btn-outline" onclick="viewSections(${c.id})" style="flex: 1;">View Sections</button>
+                            <button class="btn-small" onclick="editClass(${c.id})">✏️ Edit</button>
+                            <button class="btn-small btn-danger" onclick="deleteClass(${c.id}, '${c.name}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            });
     }
 
-    // Fetch student counts for each class
-    Promise.all(classesData.map(async (c) => {
-        try {
-            const response = await fetch(`/api/sections/${c.id}`);
-            const sections = await response.json();
+    function loadClassesTable() {
+        const container = document.getElementById('classesTableContainer');
+        if (!container) return;
+        container.className = 'class-cards';
+        container.innerHTML = '<p style="text-align: center; padding: 40px;">Loading classes...</p>';
+        fetch('/api/classes-with-details')
+            .then(response => response.json())
+            .then(classesWithData => {
+                if (classesWithData.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; padding: 40px;">No classes yet. Click "+ New Class" to create one.</p>';
+                    return;
+                }
+                container.innerHTML = classesWithData.map(c => `
+                    <div class="card">
+                        <h3>${c.name}</h3>
+                        <div class="grade">${c.age_range || 'Age range not set'}</div>
+                        <div class="stats">👥 ${c.totalStudents} students</div>
+                        <div class="sections" style="font-size: 12px; color: var(--gray); margin: 8px 0;">📚 Sections: ${c.sectionsList || 'None'}</div>
+                        <div style="display: flex; gap: 8px; margin-top: 12px;">
+                            <button class="btn-outline" onclick="viewSections(${c.id})" style="flex: 1;">View Sections</button>
+                            <button class="btn-small" onclick="editClass(${c.id})">✏️ Edit</button>
+                            <button class="btn-small btn-danger" onclick="deleteClass(${c.id}, '${c.name}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            });
+    }
 
-            // Count total students across all sections
-            let totalStudents = 0;
-            if (Array.isArray(sections)) {
-                sections.forEach(section => {
-                    totalStudents += section.students ? section.students.length : 0;
-                });
-            }
-            return { ...c, totalStudents };
-        } catch (error) {
-            console.error('Error fetching sections for class:', c.id, error);
-            return { ...c, totalStudents: 0 };
+    function addNewClass() {
+        const className = prompt('Enter class name:');
+        if (!className) return;
+        const gradeLevel = prompt('Grade level (0=KG1,1=KG2,2=KG3,3=Grade1,4=Grade2):');
+        if (gradeLevel === null) return;
+        const ageRange = prompt('Age range (e.g., "Ages 6-7"):');
+        if (ageRange === null) return;
+        fetch('{{ route("classes.store") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ name: className, grade_level: parseInt(gradeLevel), age_range: ageRange })
+        }).then(response => response.json()).then(data => { if (data.success) { alert('✅ Class added!'); location.reload(); } else { alert('❌ Error: ' + data.message); } });
+    }
+
+    function editClass(id) {
+        fetch(`/api/classes/${id}`).then(r => r.json()).then(classData => {
+            const newName = prompt('Edit class name:', classData.name);
+            if (!newName) return;
+            const newGradeLevel = prompt('Grade level (0=KG1,1=KG2,2=KG3,3=Grade1,4=Grade2):', classData.grade_level);
+            if (newGradeLevel === null) return;
+            const newAgeRange = prompt('Age range:', classData.age_range || '');
+            if (newAgeRange === null) return;
+            fetch(`/api/classes/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ name: newName, grade_level: parseInt(newGradeLevel), age_range: newAgeRange })
+            }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Class updated!'); displayClassesDashboard(); loadClassesTable(); } else { alert('❌ Error: ' + data.message); } });
+        });
+    }
+
+    function deleteClass(id, name) {
+        if (confirm(`Delete "${name}"?`)) {
+            fetch(`/api/classes/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
+                .then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } });
         }
-    })).then(classesWithCounts => {
-        container.innerHTML = classesWithCounts.map(c => `
-            <div class="card">
-                <h3>${c.name}</h3>
-                <div class="grade">${c.grade_level == 0 ? 'Ages 3-4' : c.grade_level == 1 ? 'Ages 4-5' : 'Ages 5-6'}</div>
-                <div class="stats">👥 ${c.totalStudents} students</div>
-                <div class="teacher">👩‍🏫 ${c.teacher || 'Not assigned'}</div>
-                <button class="btn-outline" onclick="viewSections(${c.id})" style="margin-top:12px;">View Sections</button>
-            </div>
-        `).join('');
-    }).catch(error => {
-        console.error('Error loading class data:', error);
-        container.innerHTML = '<p style="text-align: center; padding: 40px;">Error loading classes. Please refresh the page.</p>';
-    });
-}
+    }
 
-    // Display activities from database
+    // ==================== ACTIVITY FUNCTIONS ====================
+
     function displayAllActivities() {
         const container = document.getElementById('allActivitiesContainer');
         if (!container) return;
-
-        if (activitiesData.length === 0) {
-            container.innerHTML = '<p style="text-align: center; padding: 40px;">No activities yet. Click "+ New Activity" to create one.</p>';
-            return;
-        }
-
-        let html = '<table class="data-table">';
-        html += '<thead> <tr><th>Activity</th><th>Class</th><th>Duration</th><th>Status</th></tr> </thead>';
-        html += '<tbody>';
+        if (activitiesData.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No activities yet.</p>'; return; }
+        let html = '<table class="data-table"><thead><tr><th>Activity</th><th>Class</th><th>Duration</th><th>Status</th></tr></thead><tbody>';
         activitiesData.forEach(a => {
-            html += '<tr>';
-            html += `<td><strong>${a.title}</strong></td>`;
-            html += `<td>KG${a.class_id}</td>`;
-            html += `<td>${a.estimated_duration || 30} min</td>`;
-            html += `<td><span class="badge ${a.is_published ? 'published' : 'draft'}">${a.is_published ? 'Published' : 'Draft'}</span></td>`;
-            html += '</tr>';
+            html += `<tr>}<td><strong>${a.title}</strong></td><td>KG${a.class_id}</td><td>${a.estimated_duration || 30} min</td><td><span class="badge ${a.is_published ? 'published' : 'draft'}">${a.is_published ? 'Published' : 'Draft'}</span></td></tr>`;
         });
         html += '</tbody></table>';
         container.innerHTML = html;
     }
 
-    // Display teacher log from database
+    function loadActivitiesTable() {
+        fetch('/api/activities').then(r => r.json()).then(data => {
+            const container = document.getElementById('activitiesTableContainer');
+            if (data.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No activities yet.</p>'; return; }
+            let html = '<table class="data-table"><thead><tr><th>Title</th><th>Class</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(a => {
+                html += `<tr><td><strong>${a.title}</strong></td><td>${a.class_id}</td><td>${a.estimated_duration || 30} min</td><td>${a.is_published ? 'Published' : 'Draft'}</td><td><button class="btn-small" onclick="editActivity(${a.id})">✏️ Edit</button> <button class="btn-small btn-danger" onclick="deleteActivity(${a.id}, '${a.title}')">🗑️ Delete</button></td></tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        });
+    }
+
     function displayTeacherLog() {
         const container = document.getElementById('recentActivitiesContainer');
         if (!container) return;
-
-        if (teacherLogData.length === 0) {
-            container.innerHTML = '<p style="text-align: center; padding: 40px;">No activities taught yet.</p>';
-            return;
-        }
-
-        let html = '<table class="data-table">';
-        html += '<thead> <tr><th>Activity</th><th>Class</th><th>Teacher</th><th>Duration</th><th>Time</th><tr> </thead>';
-        html += '<tbody>';
+        if (teacherLogData.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No activities taught yet.</p>'; return; }
+        let html = '<table class="data-table"><thead><tr><th>Activity</th><th>Class</th><th>Teacher</th><th>Duration</th><th>Time</th></tr></thead><tbody>';
         teacherLogData.forEach(l => {
             const r = getRelativeTime(l.timestamp);
-            html += '<tr>';
-            html += `<td><strong>${l.activity}</strong></td>`;
-            html += `<td>${l.class}</td>`;
-            html += `<td>👩‍🏫 ${l.teacher}</td>`;
-            html += `<td>${l.duration}</td>`;
-            html += `<td><span class="time-badge ${r.class}">${r.text}</span></td>`;
-            html += '</tr>';
+            html += `<tr><td><strong>${l.activity}</strong></td><td>${l.class}</td><td>👩‍🏫 ${l.teacher}</td><td>${l.duration}</td><td><span class="time-badge ${r.class}">${r.text}</span></td></tr>`;
         });
         html += '</tbody></table>';
         container.innerHTML = html;
     }
 
-    // View Sections Modal
+    function editActivity(id) { alert('Edit activity coming soon!'); }
+    function deleteActivity(id, title) { if (confirm(`Delete "${title}"?`)) { fetch(`/api/activities/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } }); } }
+
+    // ==================== SECTION FUNCTIONS ====================
+
     function viewSections(classId) {
         currentClassId = classId;
         const classItem = classesData.find(c => c.id == classId);
-        const className = classItem ? classItem.name : 'Class';
-        document.getElementById('modalClassName').innerHTML = `${className} - Sections`;
+        document.getElementById('modalClassName').innerHTML = `${classItem ? classItem.name : 'Class'} - Sections`;
         loadSectionsForClass(classId);
         document.getElementById('sectionsModal').style.display = 'flex';
     }
 
     function loadSectionsForClass(classId) {
-        fetch(`/api/sections/${classId}/details`)
-            .then(response => response.json())
-            .then(data => {
-                const body = document.getElementById('sectionsModalBody');
-                if (data.length === 0) {
-                    body.innerHTML = `<div class="empty-state"><p>No sections found.</p><button class="btn-primary" onclick="openAddSectionModal()">+ Add First Section</button></div>`;
-                    return;
-                }
-                let html = '';
-                data.forEach(section => {
-                    html += `<div class="section-card">
-                        <div style="display: flex; justify-content: space-between;">
-                            <h4>Section ${section.section_name}</h4>
-                            <div><button class="btn-small" onclick="editSection(${section.id})">✏️ Edit</button><button class="btn-small btn-danger" onclick="deleteSection(${section.id})">🗑️ Delete</button></div>
-                        </div>
-                        <div><strong>👩‍🏫 Teacher:</strong> ${section.teacher_name || 'Not assigned'}</div>
-                        <div><strong>👥 Students:</strong> ${section.students.length} / ${section.max_students}</div>
-                        <div><strong>Student List:</strong></div>
-                        ${section.students.map(s => `<div style="display: flex; justify-content: space-between; padding: 5px;"><span>👦 ${s.full_name}</span><button class="btn-small btn-danger" onclick="removeStudent(${section.id}, ${s.id})">Remove</button></div>`).join('')}
-                        <button class="add-student-btn" onclick="openAddStudentModal(${section.id})">+ Add Student</button>
-                    </div>`;
-                });
-                html += `<button class="btn-primary" onclick="openAddSectionModal()" style="width:100%; margin-top:16px;">+ Add New Section</button>`;
-                body.innerHTML = html;
+        fetch(`/api/sections/${classId}/details`).then(r => r.json()).then(data => {
+            const body = document.getElementById('sectionsModalBody');
+            if (data.length === 0) { body.innerHTML = `<div class="empty-state"><p>No sections found.</p><button class="btn-primary" onclick="openAddSectionModal()">+ Add First Section</button></div>`; return; }
+            let html = '';
+            data.forEach(section => {
+                html += `<div class="section-card">
+                    <div style="display: flex; justify-content: space-between;"><h4>Section ${section.section_name}</h4><div><button class="btn-small" onclick="editSection(${section.id})">✏️ Edit</button><button class="btn-small btn-danger" onclick="deleteSection(${section.id})">🗑️ Delete</button></div></div>
+                    <div><strong>👩‍🏫 Teacher:</strong> ${section.teacher_name || 'Not assigned'}</div>
+                    <div><strong>👥 Students:</strong> ${section.students.length} / ${section.max_students}</div>
+                    <div><strong>Student List:</strong></div>
+                    ${section.students.map(s => `<div style="display: flex; justify-content: space-between; padding: 5px;"><span>👦 ${s.full_name}</span><button class="btn-small btn-danger" onclick="removeStudent(${section.id}, ${s.id})">Remove</button></div>`).join('')}
+                    <button class="add-student-btn" onclick="openAddStudentToSectionModal(${section.id})">+ Add Student</button>
+                </div>`;
             });
+            html += `<button class="btn-primary" onclick="openAddSectionModal()" style="width:100%; margin-top:16px;">+ Add New Section</button>`;
+            body.innerHTML = html;
+        });
     }
 
     function openAddSectionModal() {
-        fetch('/api/teachers/list')
-            .then(response => response.json())
-            .then(teachers => {
-                let teacherOptions = '<option value="">Select Teacher</option>';
-                teachers.forEach(t => { teacherOptions += `<option value="${t.id}">${t.full_name}</option>`; });
-                document.getElementById('addSectionModal').querySelector('.modal-body').innerHTML = `
-                    <div><label>Section Name</label><input type="text" id="newSectionName" class="form-input"></div>
-                    <div><label>Teacher</label><select id="newSectionTeacher" class="form-select">${teacherOptions}</select></div>
-                    <div><label>Max Students</label><input type="number" id="newSectionMaxStudents" value="25" class="form-input"></div>
-                    <div class="form-actions"><button class="btn-secondary" onclick="closeAddSectionModal()">Cancel</button><button class="btn-primary" onclick="saveNewSection()">Add Section</button></div>
-                `;
-            });
+        fetch('/api/teachers/list').then(r => r.json()).then(teachers => {
+            let teacherOptions = '<option value="">Select Teacher</option>';
+            teachers.forEach(t => { teacherOptions += `<option value="${t.id}">${t.full_name}</option>`; });
+            document.getElementById('addSectionModal').querySelector('.modal-body').innerHTML = `
+                <div><label>Section Name</label><input type="text" id="newSectionName" class="form-input"></div>
+                <div><label>Teacher</label><select id="newSectionTeacher" class="form-select">${teacherOptions}</select></div>
+                <div><label>Max Students</label><input type="number" id="newSectionMaxStudents" value="25" class="form-input"></div>
+                <div class="form-actions"><button class="btn-secondary" onclick="closeAddSectionModal()">Cancel</button><button class="btn-primary" onclick="saveNewSection()">Add Section</button></div>
+            `;
+        });
         document.getElementById('sectionsModal').style.display = 'none';
         document.getElementById('addSectionModal').style.display = 'flex';
     }
@@ -498,107 +557,386 @@ function displayClassesDashboard() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
             body: JSON.stringify({ class_id: currentClassId, section_name: sectionName, teacher_id: teacherId || null, max_students: maxStudents })
-        }).then(response => response.json()).then(data => {
-            if (data.success) { alert('✅ Section added!'); closeAddSectionModal(); loadSectionsForClass(currentClassId); }
-            else { alert('❌ Error: ' + data.message); }
-        });
+        }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Section added!'); closeAddSectionModal(); loadSectionsForClass(currentClassId); } else { alert('❌ Error: ' + data.message); } });
     }
 
     function editSection(sectionId) {
-        fetch(`/api/sections/${sectionId}`).then(r => r.json()).then(section => {
+    // First fetch the section data
+    fetch(`/api/sections/${sectionId}`)
+        .then(response => response.json())
+        .then(section => {
             const newName = prompt('New section name:', section.section_name);
             if (!newName) return;
+
             const newMax = prompt('Max students:', section.max_students);
-            fetch('/api/teachers/list').then(r => r.json()).then(teachers => {
-                let teacherList = '0 = No teacher\n';
-                teachers.forEach(t => { teacherList += `${t.id} = ${t.full_name}\n`; });
-                const teacherId = prompt(`Enter teacher ID:\n${teacherList}`, section.teacher_id || '0');
-                fetch(`/api/sections/${sectionId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ section_name: newName, max_students: parseInt(newMax), teacher_id: teacherId === '0' ? null : parseInt(teacherId) })
-                }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Section updated!'); loadSectionsForClass(currentClassId); } });
-            });
+            if (!newMax) return;
+
+            // Fetch teachers list
+            fetch('/api/teachers/list')
+                .then(r => r.json())
+                .then(teachers => {
+                    let teacherList = '0 = No teacher\n';
+                    teachers.forEach(t => {
+                        teacherList += `${t.id} = ${t.full_name}\n`;
+                    });
+
+                    const teacherId = prompt(`Enter teacher ID:\n${teacherList}`, section.teacher_id || '0');
+
+                    // Update the section
+                    fetch(`/api/sections/${sectionId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            section_name: newName,
+                            max_students: parseInt(newMax),
+                            teacher_id: teacherId === '0' ? null : parseInt(teacherId)
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('✅ Section updated!');
+                            loadSectionsForClass(currentClassId);
+                        } else {
+                            alert('❌ Error: ' + data.message);
+                        }
+                    });
+                });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error fetching section data');
         });
-    }
+}
 
     function deleteSection(sectionId) {
         if (confirm('Delete this section?')) {
-            fetch(`/api/sections/${sectionId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
-                .then(r => r.json()).then(data => { if (data.success) { alert('✅ Section deleted!'); loadSectionsForClass(currentClassId); } });
+            fetch(`/api/sections/${sectionId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Section deleted!'); loadSectionsForClass(currentClassId); } });
         }
     }
 
-    function openAddStudentModal(sectionId) {
+    // ==================== STUDENT SECTION FUNCTIONS ====================
+
+        function openAddStudentToSectionModal(sectionId) {
         currentSectionId = sectionId;
-        document.getElementById('addStudentModal').querySelector('.modal-body').innerHTML = `
-            <div><label>Student Name</label><input type="text" id="newStudentName" class="form-input"></div>
-            <div><label>Parent Name</label><input type="text" id="newStudentParent" class="form-input"></div>
-            <div class="form-actions"><button class="btn-secondary" onclick="closeAddStudentModal()">Cancel</button><button class="btn-primary" onclick="saveNewStudent()">Add Student</button></div>
-        `;
-        document.getElementById('sectionsModal').style.display = 'none';
-        document.getElementById('addStudentModal').style.display = 'flex';
+        fetch(`/api/sections/${sectionId}/available-students`)
+            .then(response => response.json())
+            .then(students => {
+                let options = '<option value="">-- Select Student --</option>';
+                students.forEach(s => {
+                    options += `<option value="${s.id}">${s.full_name} (DOB: ${s.date_of_birth}, Age: ${s.current_age})</option>`;
+                });
+                if (students.length === 0) options = '<option value="">No eligible students available</option>';
+                document.getElementById('existingStudentId').innerHTML = options;
+                document.getElementById('sectionsModal').style.display = 'none';
+                document.getElementById('addStudentToSectionModal').style.display = 'flex';
+            });
     }
 
-    function closeAddStudentModal() {
-        document.getElementById('addStudentModal').style.display = 'none';
+    function closeAddStudentToSectionModal() {
+        document.getElementById('addStudentToSectionModal').style.display = 'none';
         if (currentClassId) { document.getElementById('sectionsModal').style.display = 'flex'; loadSectionsForClass(currentClassId); }
     }
 
-    function saveNewStudent() {
-    const studentName = document.getElementById('newStudentName').value;
-    const parentName = document.getElementById('newStudentParent').value;
-
-    if (!studentName) {
-        alert('Please enter student name');
-        return;
-    }
-
+    function saveExistingStudent() {
+    const studentId = document.getElementById('existingStudentId').value;
+    if (!studentId) { alert('Please select a student'); return; }
     fetch('/api/sections/add-student', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            section_id: currentSectionId,
-            student_name: studentName,
-            parent_name: parentName
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ section_id: currentSectionId, student_id: studentId })
+    }).then(r => r.json()).then(data => {
         if (data.success) {
-            alert(`✅ Student "${studentName}" added successfully!`);
-            closeAddStudentModal();
-            // Reload sections to update the student count
+            alert('✅ Student added to section!');
+            closeAddStudentToSectionModal();
             loadSectionsForClass(currentClassId);
-        } else {
-            alert('❌ Error: ' + data.message);
+            // ALSO refresh the dashboard class cards
+            displayClassesDashboard();
+            loadClassesTable();
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('❌ Error adding student. Please try again.');
     });
 }
 
     function removeStudent(sectionId, studentId) {
-        if (confirm('Remove student?')) {
-            fetch(`/api/sections/${sectionId}/student/${studentId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
-                .then(r => r.json()).then(data => { if (data.success) { alert('✅ Student removed'); loadSectionsForClass(currentClassId); } });
-        }
+    if (confirm('Remove student from section?')) {
+        fetch(`/api/sections/${sectionId}/student/${studentId}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                alert('✅ Student removed');
+                loadSectionsForClass(currentClassId);
+                // ALSO refresh the dashboard class cards
+                displayClassesDashboard();
+                loadClassesTable();
+            }
+        });
     }
+}
 
     function closeSectionsModal() { document.getElementById('sectionsModal').style.display = 'none'; }
 
-    // Sidebar navigation
+    // ==================== TEACHER FUNCTIONS ====================
+
+    function loadTeachersTable() {
+        fetch('/api/teachers').then(r => r.json()).then(data => {
+            const container = document.getElementById('teachersTableContainer');
+            if (data.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No teachers yet.</p>'; return; }
+            let html = '<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(t => {
+                html += `<tr><td><strong>${t.full_name}</strong></td><td>${t.email || '-'}</td><td>${t.phone || '-'}</td><td><button class="btn-small" onclick="editTeacher(${t.id}, '${t.full_name}', '${t.email || ''}', '${t.phone || ''}')">✏️ Edit</button> <button class="btn-small btn-danger" onclick="deleteTeacher(${t.id}, '${t.full_name}')">🗑️ Delete</button></td></tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        });
+    }
+
+    function addNewTeacher() {
+        const fullName = prompt('Enter teacher name:');
+        if (!fullName) return;
+        const email = prompt('Email (optional):');
+        const phone = prompt('Phone (optional):');
+        fetch('/api/teachers/store', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ full_name: fullName, email: email || '', phone: phone || '' })
+        }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Teacher added!'); loadTeachersTable(); } else { alert('❌ Error: ' + data.message); } });
+    }
+
+    function editTeacher(id, currentName, currentEmail, currentPhone) {
+        const newName = prompt('Edit name:', currentName);
+        if (!newName) return;
+        const newEmail = prompt('Edit email:', currentEmail);
+        const newPhone = prompt('Edit phone:', currentPhone);
+        fetch(`/api/teachers/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ full_name: newName, email: newEmail || '', phone: newPhone || '' })
+        }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Teacher updated!'); loadTeachersTable(); } else { alert('❌ Error: ' + data.message); } });
+    }
+
+    function deleteTeacher(id, name) { if (confirm(`Delete "${name}"?`)) { fetch(`/api/teachers/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } }); } }
+
+    // ==================== PARENT FUNCTIONS ====================
+
+    function loadParentsTable() {
+        fetch('/api/parents').then(r => r.json()).then(data => {
+            const container = document.getElementById('parentsTableContainer');
+            if (data.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No parents yet.</p>'; return; }
+            let html = '<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(p => {
+                html += `<tr><td><strong>${p.full_name}</strong></td><td>${p.email || '-'}</td><td>${p.phone || '-'}</td><td><button class="btn-small" onclick="editParent(${p.id}, '${p.full_name}', '${p.email || ''}', '${p.phone || ''}')">✏️ Edit</button> <button class="btn-small btn-danger" onclick="deleteParent(${p.id}, '${p.full_name}')">🗑️ Delete</button></td></tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        });
+    }
+
+    function addNewParent() {
+        const fullName = prompt('Enter parent name:');
+        if (!fullName) return;
+        const email = prompt('Email:');
+        if (!email) { alert('Email is required'); return; }
+        const phone = prompt('Phone (optional):');
+        fetch('/api/parents/store', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ full_name: fullName, email: email, phone: phone || '' })
+        }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Parent added!'); loadParentsTable(); } else { alert('❌ Error: ' + data.message); } });
+    }
+
+    function editParent(id, currentName, currentEmail, currentPhone) {
+        const newName = prompt('Edit name:', currentName);
+        if (!newName) return;
+        const newEmail = prompt('Edit email:', currentEmail);
+        if (!newEmail) return;
+        const newPhone = prompt('Edit phone:', currentPhone);
+        fetch(`/api/parents/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ full_name: newName, email: newEmail, phone: newPhone || '' })
+        }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Parent updated!'); loadParentsTable(); } else { alert('❌ Error: ' + data.message); } });
+    }
+
+    function deleteParent(id, name) { if (confirm(`Delete "${name}"?`)) { fetch(`/api/parents/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } }); } }
+
+    // ==================== STUDENT PAGE FUNCTIONS ====================
+
+        function loadStudentsTable() {
+        fetch('/api/students')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('studentsTableContainer');
+                if (data.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; padding: 40px;">No students yet. Click "+ New Student" to create one.</p>';
+                    return;
+                }
+
+                let html = '<table class="data-table"><thead>';
+                html += '<tr>';
+                html += '<th>Name</th><th>Date of Birth</th><th>Age</th><th>Suggested Class</th><th>Status</th><th>Parent</th><th>Actions</th>';
+                html += '</tr></thead><tbody>';
+
+                data.forEach(student => {
+                    const status = student.is_enrolled ? '<span class="badge published">Enrolled</span>' : '<span class="badge draft">Not Enrolled</span>';
+                    html += `<tr>
+                        <td><strong>${student.full_name}</strong></td>
+                        <td>${student.date_of_birth || '-'}</td>
+                        <td>${student.current_age || '-'} years</td>
+                        <td>${student.suggested_class_name || '-'} (${student.suggested_age_range})</td>
+                        <td>${status}</td>
+                        <td>${student.parent_name || 'No parent assigned'}</td>
+                        <td>
+                            <button class="btn-small" onclick="openEditStudentModal(${student.id})">✏️ Edit</button>
+                            <button class="btn-small btn-danger" onclick="deleteStudent(${student.id}, '${student.full_name}')">🗑️ Delete</button>
+                        </td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            });
+    }
+
+        function openEditStudentModal(id) {
+        fetch(`/api/students/${id}`)
+            .then(response => response.json())
+            .then(student => {
+                document.getElementById('editStudentId').value = student.id;
+                document.getElementById('editStudentName').value = student.full_name;
+                document.getElementById('editStudentDob').value = student.date_of_birth;
+
+                fetch('/api/parents')
+                    .then(response => response.json())
+                    .then(parents => {
+                        let options = '<option value="">-- Select Parent --</option>';
+                        parents.forEach(p => {
+                            options += `<option value="${p.id}" ${student.parent_id == p.id ? 'selected' : ''}>${p.full_name}</option>`;
+                        });
+                        document.getElementById('editStudentParentId').innerHTML = options;
+                        document.getElementById('editStudentModal').style.display = 'flex';
+                    });
+            });
+    }
+
+    function closeEditStudentModal() {
+        document.getElementById('editStudentModal').style.display = 'none';
+    }
+
+    function updateStudentRecord() {
+        const id = document.getElementById('editStudentId').value;
+        const fullName = document.getElementById('editStudentName').value;
+        const dob = document.getElementById('editStudentDob').value;
+        const parentId = document.getElementById('editStudentParentId').value;
+
+        if (!fullName) { alert('Please enter student name'); return; }
+
+        fetch(`/api/students/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ full_name: fullName, date_of_birth: dob, parent_id: parentId || null })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ Student updated successfully!');
+                closeEditStudentModal();
+                loadStudentsTable();
+            } else {
+                alert('❌ Error: ' + data.message);
+            }
+        });
+    }
+
+function editStudent(id) {
+    fetch(`/api/students/${id}`)
+        .then(response => response.json())
+        .then(student => {
+            const newName = prompt('Edit student name:', student.full_name);
+            if (!newName) return;
+
+            const newDob = prompt('Edit date of birth (YYYY-MM-DD):', student.date_of_birth);
+            if (!newDob) return;
+
+            fetch('/api/parents')
+                .then(response => response.json())
+                .then(parents => {
+                    let parentOptions = 'Current parent: ' + (student.parent_name || 'None') + '\n\n';
+                    parents.forEach(p => {
+                        parentOptions += `${p.id}: ${p.full_name}\n`;
+                    });
+
+                    const parentId = prompt(`Enter parent ID:\n${parentOptions}\n\nEnter 0 for no parent:`, student.parent_id || '0');
+
+                    fetch(`/api/students/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            full_name: newName,
+                            date_of_birth: newDob,
+                            parent_id: parentId === '0' ? null : parseInt(parentId)
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('✅ Student updated successfully!');
+                            loadStudentsTable();
+                        } else {
+                            alert('❌ Error: ' + data.message);
+                        }
+                    });
+                });
+        });
+}
+
+    function openNewStudentModal() {
+        fetch('/api/parents').then(r => r.json()).then(parents => {
+            let options = '<option value="">-- Select Parent --</option>';
+            parents.forEach(p => { options += `<option value="${p.id}">${p.full_name}</option>`; });
+            document.getElementById('newStudentParentId').innerHTML = options;
+        });
+        document.getElementById('newStudentModal').style.display = 'flex';
+    }
+
+    function closeNewStudentModal() {
+        document.getElementById('newStudentModal').style.display = 'none';
+        document.getElementById('newStudentName').value = '';
+        document.getElementById('newStudentDob').value = '';
+    }
+
+    function saveNewStudentRecord() {
+        const fullName = document.getElementById('newStudentName').value;
+        const dob = document.getElementById('newStudentDob').value;
+        const parentId = document.getElementById('newStudentParentId').value;
+        if (!fullName) { alert('Please enter student name'); return; }
+        fetch('/api/students/store', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ full_name: fullName, date_of_birth: dob, parent_id: parentId || null })
+        }).then(r => r.json()).then(data => {
+            if (data.success) { alert('✅ Student added!'); closeNewStudentModal(); loadStudentsTable(); }
+            else { alert('❌ Error: ' + data.message); }
+        });
+    }
+
+    function editStudent(id) { alert('Edit student coming soon!'); }
+    function deleteStudent(id, name) { if (confirm(`Delete "${name}"?`)) { fetch(`/api/students/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } }); } }
+
+    // ==================== SIDEBAR NAVIGATION ====================
+
     const sidebarItems = document.querySelectorAll('.sidebar nav li');
     const pages = {
         dashboard: document.getElementById('dashboardPage'),
         classes: document.getElementById('classesPage'),
         teachers: document.getElementById('teachersPage'),
         parents: document.getElementById('parentsPage'),
+        students: document.getElementById('studentsPage'),
         activities: document.getElementById('activitiesPage'),
         settings: document.getElementById('settingsPage')
     };
@@ -613,87 +951,22 @@ function displayClassesDashboard() {
             if (pageName === 'classes') loadClassesTable();
             if (pageName === 'teachers') loadTeachersTable();
             if (pageName === 'parents') loadParentsTable();
+            if (pageName === 'students') loadStudentsTable();
             if (pageName === 'activities') loadActivitiesTable();
         });
     });
 
-    function loadClassesTable() {
-        fetch('/api/classes').then(r => r.json()).then(data => {
-            const container = document.getElementById('classesTableContainer');
-            if (data.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No classes yet.</p>'; return; }
-            let html = '<table class="data-table"><thead><tr><th>Name</th><th>Grade Level</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-            data.forEach(c => {
-                html += `<tr><td><strong>${c.name}</strong></td><td>${parseInt(c.grade_level)}</td><td>${c.is_active ? 'Active' : 'Inactive'}</td><td><button class="btn-small" onclick="editClass(${c.id}, '${c.name}', ${parseInt(c.grade_level)})">✏️ Edit</button> <button class="btn-small btn-danger" onclick="deleteClass(${c.id}, '${c.name}')">🗑️ Delete</button></td></tr>`;
-            });
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        });
-    }
-
-    function loadActivitiesTable() {
-        fetch('/api/activities').then(r => r.json()).then(data => {
-            const container = document.getElementById('activitiesTableContainer');
-            if (data.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No activities yet.</p>'; return; }
-            let html = '<table class="data-table"><thead><tr><th>Title</th><th>Class</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-            data.forEach(a => {
-                html += `<tr><td><strong>${a.title}</strong></td><td>${a.class_id}</td><td>${a.estimated_duration || 30} min</td><td>${a.is_published ? 'Published' : 'Draft'}</td><td><button class="btn-small" onclick="editActivity(${a.id})">✏️ Edit</button> <button class="btn-small btn-danger" onclick="deleteActivity(${a.id}, '${a.title}')">🗑️ Delete</button></td></tr>`;
-            });
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        });
-    }
-
-    function loadTeachersTable() {
-        fetch('/api/teachers').then(r => r.json()).then(data => {
-            const container = document.getElementById('teachersTableContainer');
-            if (data.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No teachers yet.</p>'; return; }
-            let html = '<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody>';
-            data.forEach(t => {
-                html += `<tr><td>${t.full_name}</td><td>${t.email || '-'}</td><td>${t.phone || '-'}</td><td><button class="btn-small" onclick="editTeacher(${t.id}, '${t.full_name}', '${t.email || ''}', '${t.phone || ''}')">✏️ Edit</button> <button class="btn-small btn-danger" onclick="deleteTeacher(${t.id}, '${t.full_name}')">🗑️ Delete</button></td></tr>`;
-            });
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        });
-    }
-
-    function loadParentsTable() {
-        fetch('/api/parents').then(r => r.json()).then(data => {
-            const container = document.getElementById('parentsTableContainer');
-            if (data.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No parents yet.</p>'; return; }
-            let html = '<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody>';
-            data.forEach(p => {
-                html += `<tr><td>${p.full_name}</td><td>${p.email || '-'}</td><td>${p.phone || '-'}</td><td><button class="btn-small" onclick="editParent(${p.id}, '${p.full_name}', '${p.email || ''}', '${p.phone || ''}')">✏️ Edit</button> <button class="btn-small btn-danger" onclick="deleteParent(${p.id}, '${p.full_name}')">🗑️ Delete</button></td></tr>`;
-            });
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        });
-    }
-
-    function deleteClass(id, name) { if (confirm(`Delete "${name}"?`)) { fetch(`/api/classes/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } }); } }
-    function editClass(id, currentName, currentGradeLevel) { const newName = prompt('Class name:', currentName); if (!newName) return; const newGradeLevel = prompt('Grade level (0=KG1,1=KG2,2=KG3,3=Grade1):', currentGradeLevel); if (newGradeLevel === null) return; fetch(`/api/classes/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }, body: JSON.stringify({ name: newName, grade_level: parseInt(newGradeLevel) }) }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Updated'); location.reload(); } }); }
-    function deleteActivity(id, title) { if (confirm(`Delete "${title}"?`)) { fetch(`/api/activities/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } }); } }
-    function editActivity(id) { alert('Edit activity coming soon!'); }
-    function deleteTeacher(id, name) { if (confirm(`Delete "${name}"?`)) { fetch(`/api/teachers/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } }); } }
-    function editTeacher(id, currentName, currentEmail, currentPhone) { const newName = prompt('Name:', currentName); if (!newName) return; const newEmail = prompt('Email:', currentEmail); const newPhone = prompt('Phone:', currentPhone); fetch(`/api/teachers/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }, body: JSON.stringify({ full_name: newName, email: newEmail || '', phone: newPhone || '' }) }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Updated'); location.reload(); } }); }
-    function deleteParent(id, name) { if (confirm(`Delete "${name}"?`)) { fetch(`/api/parents/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } }); } }
-    function editParent(id, currentName, currentEmail, currentPhone) { const newName = prompt('Name:', currentName); if (!newName) return; const newEmail = prompt('Email:', currentEmail); const newPhone = prompt('Phone:', currentPhone); fetch(`/api/parents/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }, body: JSON.stringify({ full_name: newName, email: newEmail || '', phone: newPhone || '' }) }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Updated'); location.reload(); } }); }
-
-    function addNewClass() {
-        const className = prompt('Class name:');
-        if (!className) return;
-        let gradeLevel = prompt('Grade level (0=KG1,1=KG2,2=KG3,3=Grade1):');
-        if (gradeLevel === null) return;
-        fetch('{{ route("classes.store") }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }, body: JSON.stringify({ name: className, grade_level: parseInt(gradeLevel) }) }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Class added!'); location.reload(); } });
-    }
+    // ==================== SETTINGS BUTTONS ====================
 
     document.getElementById('newClassBtn')?.addEventListener('click', addNewClass);
     document.getElementById('newClassBtn2')?.addEventListener('click', addNewClass);
-    document.getElementById('newTeacherBtn')?.addEventListener('click', () => alert('Add teacher coming soon'));
-    document.getElementById('newParentBtn')?.addEventListener('click', () => alert('Add parent coming soon'));
+    document.getElementById('newTeacherBtn')?.addEventListener('click', addNewTeacher);
+    document.getElementById('newParentBtn')?.addEventListener('click', addNewParent);
+    document.getElementById('newStudentBtn')?.addEventListener('click', openNewStudentModal);
     document.getElementById('newActivityBtn')?.addEventListener('click', () => window.location.href = '{{ route("create-activity") }}');
     document.getElementById('newActivityBtn2')?.addEventListener('click', () => window.location.href = '{{ route("create-activity") }}');
 
-    document.getElementById('schoolYearBtn')?.addEventListener('click', () => { const newYear = prompt('School year (YYYY-YYYY):', '2024-2025'); if (newYear) document.getElementById('schoolYearBtn').innerText = newYear; });
+    document.getElementById('schoolYearBtn')?.addEventListener('click', () => { const ny = prompt('School year (YYYY-YYYY):', '2024-2025'); if (ny) document.getElementById('schoolYearBtn').innerText = ny; });
     document.getElementById('themeBtn')?.addEventListener('click', () => { document.body.classList.toggle('dark-mode'); document.getElementById('themeBtn').innerHTML = document.body.classList.contains('dark-mode') ? 'Dark Mode 🌙' : 'Light Mode ☀️'; localStorage.setItem('coordinator_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); });
     document.getElementById('notificationsBtn')?.addEventListener('click', () => { const btn = document.getElementById('notificationsBtn'); btn.innerHTML = btn.innerHTML === 'Enabled ✓' ? 'Disabled ✗' : 'Enabled ✓'; alert('Notifications ' + (btn.innerHTML === 'Enabled ✓' ? 'enabled' : 'disabled')); });
     document.getElementById('exportBtn')?.addEventListener('click', () => { const data = { classes: classesData, activities: activitiesData, teacherLog: teacherLogData, exportDate: new Date().toISOString() }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kinderbot_export.json'; a.click(); alert('Data exported!'); });
@@ -701,11 +974,9 @@ function displayClassesDashboard() {
     const savedTheme = localStorage.getItem('coordinator_theme');
     if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); document.getElementById('themeBtn').innerHTML = 'Dark Mode 🌙'; }
 
-    // Initialize dashboard
     displayClassesDashboard();
     displayAllActivities();
     displayTeacherLog();
-</script>
-
+    </script>
 </body>
 </html>
