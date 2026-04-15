@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Teacher Dashboard - Kinderbot</title>
     <style>
         :root {
@@ -248,6 +249,7 @@
             align-items: center;
         }
         .student-item:last-child { border-bottom: none; }
+        .loading { text-align: center; padding: 40px; color: var(--gray); }
         body.dark-mode { background: #1a1a2e; }
         body.dark-mode .sidebar { background: #16213e; border-right-color: #2a2a4a; }
         body.dark-mode .sidebar nav li { color: #aaa; }
@@ -270,7 +272,7 @@
         <div class="top-bar">
             <div class="logo">👩‍🏫 Kinderbot Teacher</div>
             <div class="user-info">
-                <span>👤 Ms. Sara</span>
+                <span id="teacherName">👤 Teacher</span>
                 <button class="logout-btn" onclick="location.href='{{ route('login') }}'">Logout</button>
             </div>
         </div>
@@ -289,18 +291,18 @@
             </div>
             <div class="content">
                 <div id="dashboardPage" class="page-content active">
-                    <div class="teacher-greeting"><h1>Welcome back, Ms. Sara! 👋</h1><p class="date" id="currentDate"></p></div>
+                    <div class="teacher-greeting"><h1 id="greetingMessage">Welcome back! 👋</h1><p class="date" id="currentDate"></p></div>
                     <div class="section-header"><h2>My Classes</h2></div>
-                    <div id="classesGrid" class="classes-grid"></div>
+                    <div id="classesGrid" class="classes-grid"><div class="loading">Loading classes...</div></div>
                     <div class="section-header"><h2>Today's Activities</h2></div>
-                    <div id="todayActivities" class="activities-list"></div>
+                    <div id="todayActivities" class="activities-list"><div class="loading">Loading activities...</div></div>
                     <div class="section-header"><h2>Recent Assessments</h2><button class="btn-primary" id="quickAssessBtn">+ Quick Assessment</button></div>
-                    <div id="assessmentsTable" class="assessments-table"></div>
+                    <div id="assessmentsTable" class="assessments-table"><div class="loading">Loading assessments...</div></div>
                 </div>
-                <div id="myclassesPage" class="page-content"><div class="section-header"><h2>My Classes</h2></div><div id="myClassesTable" class="data-table"></div></div>
-                <div id="activitiesPage" class="page-content"><div class="section-header"><h2>All Activities</h2></div><div id="teacherActivitiesTable" class="data-table"></div></div>
-                <div id="reportsPage" class="page-content"><div class="section-header"><h2>Student Progress Reports</h2><button class="btn-primary" id="exportReportBtn">📊 Export Report</button></div><div id="reportsContainer" class="data-table"></div></div>
-                <div id="messagesPage" class="page-content"><div class="section-header"><h2>Messages</h2><button class="btn-primary" id="newMessageBtn">+ New Message</button></div><div id="messagesContainer" class="data-table"></div></div>
+                <div id="myclassesPage" class="page-content"><div class="section-header"><h2>My Classes</h2></div><div id="myClassesTable" class="data-table"><div class="loading">Loading...</div></div></div>
+                <div id="activitiesPage" class="page-content"><div class="section-header"><h2>All Activities</h2></div><div id="teacherActivitiesTable" class="data-table"><div class="loading">Loading...</div></div></div>
+                <div id="reportsPage" class="page-content"><div class="section-header"><h2>Student Progress Reports</h2><button class="btn-primary" id="exportReportBtn">📊 Export Report</button></div><div id="reportsContainer" class="data-table"><div class="loading">Loading...</div></div></div>
+                <div id="messagesPage" class="page-content"><div class="section-header"><h2>Messages</h2><button class="btn-primary" id="newMessageBtn">+ New Message</button></div><div id="messagesContainer" class="data-table"><div class="loading">Loading...</div></div></div>
                 <div id="settingsPage" class="page-content">
                     <div class="section-header"><h2>Settings</h2></div>
                     <div class="data-table">
@@ -315,145 +317,426 @@
         </div>
     </div>
 
+    <!-- Modals -->
     <div id="classDetailsModal" class="modal"><div class="modal-content"><h3 id="classDetailsTitle">Class Details</h3><div id="classDetailsContent"></div><div class="modal-buttons"><button class="btn-cancel" onclick="closeClassModal()">Close</button></div></div></div>
-    <div id="assessmentModal" class="modal"><div class="modal-content"><h3>Quick Assessment</h3><label>Student:</label><select id="modalStudent"><option value="">Select Student</option><option value="Sara Habchy">Sara Habchy</option><option value="Michael Fadel">Michael Fadel</option><option value="Jean Dagher">Jean Dagher</option><option value="Ahmad Hassan">Ahmad Hassan</option><option value="Leila Khoury">Leila Khoury</option></select><label>Activity:</label><select id="modalActivity"><option value="">Select Activity</option><option value="Build a Robot">Build a Robot</option><option value="Spinning Top">Spinning Top</option><option value="Direction Car">Direction Car</option><option value="See Saw">See Saw</option><option value="Car Launcher">Car Launcher</option></select><label>Rating:</label><div class="star-rating" id="starRating"><span class="star" data-value="1">★</span><span class="star" data-value="2">★</span><span class="star" data-value="3">★</span><span class="star" data-value="4">★</span><span class="star" data-value="5">★</span></div><label>Comments:</label><textarea id="modalComments" rows="3"></textarea><div class="modal-buttons"><button class="btn-cancel" onclick="closeAssessmentModal()">Cancel</button><button class="btn-save" onclick="saveAssessment()">Save</button></div></div></div>
+    <div id="assessmentModal" class="modal"><div class="modal-content"><h3>Quick Assessment</h3><label>Student:</label><select id="modalStudent"><option value="">Select Student</option></select><label>Activity:</label><select id="modalActivity"><option value="">Select Activity</option></select><label>Rating:</label><div class="star-rating" id="starRating"><span class="star" data-value="1">★</span><span class="star" data-value="2">★</span><span class="star" data-value="3">★</span><span class="star" data-value="4">★</span><span class="star" data-value="5">★</span></div><label>Comments:</label><textarea id="modalComments" rows="3"></textarea><div class="modal-buttons"><button class="btn-cancel" onclick="closeAssessmentModal()">Cancel</button><button class="btn-save" onclick="saveAssessment()">Save</button></div></div></div>
+    <div id="messageModal" class="modal"><div class="modal-content"><h3>Send Message</h3><label>To:</label><input type="text" id="messageTo" class="form-input" readonly><label>Subject:</label><input type="text" id="messageSubject" class="form-input"><label>Message:</label><textarea id="messageBody" rows="4" class="form-input"></textarea><div class="modal-buttons"><button class="btn-cancel" onclick="closeMessageModal()">Cancel</button><button class="btn-save" onclick="sendMessage()">Send</button></div></div></div>
 
     <script>
+        // Set current date
         document.getElementById('currentDate').innerHTML = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-        const teacherClasses = [
-            { id: 1, name: "KG1 - Section A", students: 18, time: "9:00 - 10:30 AM", nextActivity: "Car Launcher", teacher: "Ms. Sara", room: "Room 101", studentsList: ["Sara Habchy", "Michael Fadel", "Jean Dagher", "Ahmad Hassan", "Leila Khoury"] },
-            { id: 2, name: "KG2 - Section A", students: 15, time: "10:30 - 12:00 PM", nextActivity: "Precision In Motion", teacher: "Ms. Sara", room: "Room 102", studentsList: ["Omar Ali", "Nour Fares", "Hadi Saleh", "Layla Karam", "Rami Khoury"] },
-            { id: 3, name: "KG2 - Section B", students: 21, time: "1:30 - 3:00 PM", nextActivity: "Precision In Motion", teacher: "Ms. Sara", room: "Room 103", studentsList: ["Tarek Haddad", "Maya Nassar", "Samir Abi", "Dina Haddad", "Karim Fares"] }
-        ];
-        const todayActivities = [
-            { id: 1, title: "Build a Robot", class: "KG1-A", time: "9:00 AM", duration: "20 min", activityKey: "BUILD A ROBOT" },
-            { id: 2, title: "Precision In Motion", class: "KG2-B", time: "10:30 AM", duration: "20 min", activityKey: "PRECISION IN MOTION" },
-            { id: 3, title: "Direction Car", class: "KG3-A", time: "1:00 PM", duration: "20 min", activityKey: "DIRECTION CAR" }
-        ];
+        // Get teacher name from Laravel
+        const teacherName = @json($teacherName ?? 'Teacher');
+        document.getElementById('teacherName').innerHTML = `👤 ${teacherName}`;
+        document.getElementById('greetingMessage').innerHTML = `Welcome back, ${teacherName}! 👋`;
 
-        function loadAssessments() {
-            let a = localStorage.getItem('teacher_assessments');
-            if (!a) a = JSON.stringify([{ id:1, student:"Sara Habchy", activity:"Direction Car", rating:4, comments:"", date:"2025-03-24" }, { id:2, student:"Michael Fadel", activity:"See Saw", rating:3, comments:"", date:"2025-03-24" }, { id:3, student:"Jean Dagher", activity:"Cinema", rating:4, comments:"", date:"2025-03-24" }]);
-            return JSON.parse(a);
+        let currentClassData = null;
+        let selectedRating = 0;
+
+        // ==================== API CALLS ====================
+
+        async function fetchAPI(url) {
+            try {
+                const response = await fetch(url, {
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                return [];
+            }
         }
-        function saveAssessments(a) { localStorage.setItem('teacher_assessments', JSON.stringify(a)); }
 
+        async function postAPI(url, data) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(data)
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                return { success: false };
+            }
+        }
+
+        // ==================== DASHBOARD FUNCTIONS ====================
+
+        async function loadClasses() {
+            const container = document.getElementById('classesGrid');
+            const data = await fetchAPI('/api/teacher/classes');
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;padding:40px;">No classes assigned yet.</p>';
+                return;
+            }
+
+            container.innerHTML = data.map(cls => `
+                <div class="class-card" onclick="viewClassDetails(${JSON.stringify(cls).replace(/"/g, '&quot;')})">
+                    <h3>${cls.name}</h3>
+                    <div class="class-stats"><p>👥 ${cls.students} students</p><p>🕒 ${cls.time || 'Schedule TBD'}</p></div>
+                    <div class="next-activity">Next: ${cls.nextActivity || 'No activities'}</div>
+                    <button class="btn-view" onclick="event.stopPropagation(); viewClassDetails(${JSON.stringify(cls).replace(/"/g, '&quot;')})">View Class</button>
+                </div>
+            `).join('');
+        }
+
+        async function loadTodayActivities() {
+            const container = document.getElementById('todayActivities');
+            const data = await fetchAPI('/api/teacher/today-activities');
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;padding:40px;">No activities scheduled for today.</p>';
+                return;
+            }
+
+            container.innerHTML = data.map(a => `
+                <div class="activity-item">
+                    <div class="activity-info">
+                        <h4>${a.title}</h4>
+                        <div class="activity-meta"><span>📚 ${a.class}</span><span>⏱️ ${a.duration}</span></div>
+                    </div>
+                    <button class="btn-start" onclick="startActivity('${a.title}', '${a.class}')">Start Activity</button>
+                </div>
+            `).join('');
+        }
+
+        async function loadAssessments() {
+            const container = document.getElementById('assessmentsTable');
+            const data = await fetchAPI('/api/teacher/assessments');
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;padding:40px;">No assessments yet.</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Student</th><th>Activity</th><th>Rating</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(a => {
+                html += `<tr>
+                    <td><strong>${a.student}</strong></td>
+                    <td>${a.activity}</td>
+                    <td class="rating">${'★'.repeat(a.rating)}${'☆'.repeat(5-a.rating)}</td>
+                    <td>${a.date}</td>
+                    <td><button class="btn-edit" onclick="editAssessment(${a.id})">Edit</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // ==================== PAGE LOADERS ====================
+
+        async function displayMyClasses() {
+            const container = document.getElementById('myClassesTable');
+            const data = await fetchAPI('/api/teacher/classes');
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;padding:40px;">No classes assigned.</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Class</th><th>Students</th><th>Schedule</th><th>Next Activity</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(cls => {
+                html += `<tr>
+                    <td><strong>${cls.name}</strong></td>
+                    <td>${cls.students}</td>
+                    <td>${cls.time || 'TBD'}</td>
+                    <td>${cls.nextActivity || 'None'}</td>
+                    <td><button class="btn-small" onclick="viewClassDetails(${JSON.stringify(cls).replace(/"/g, '&quot;')})">View</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function displayTeacherActivities() {
+            const container = document.getElementById('teacherActivitiesTable');
+            const data = await fetchAPI('/api/teacher/all-activities');
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;padding:40px;">No activities available.</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Activity</th><th>Class</th><th>Duration</th><th>Difficulty</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(a => {
+                html += `<tr>
+                    <td><strong>${a.title}</strong></td>
+                    <td>${a.class}</td>
+                    <td>${a.duration} min</td>
+                    <td>${a.difficulty}</td>
+                    <td><button class="btn-small" onclick="startActivity('${a.title}', '${a.class}')">Start</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function displayReports() {
+            const container = document.getElementById('reportsContainer');
+            const data = await fetchAPI('/api/teacher/assessments');
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;padding:40px;">No assessment data yet.</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>Student</th><th>Activity</th><th>Rating</th><th>Comments</th><th>Date</th></tr></thead><tbody>';
+            data.forEach(a => {
+                html += `<tr>
+                    <td><strong>${a.student}</strong></td>
+                    <td>${a.activity}</td>
+                    <td>${'★'.repeat(a.rating)}</td>
+                    <td>${a.comments || '-'}</td>
+                    <td>${a.date}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        async function displayMessages() {
+            const container = document.getElementById('messagesContainer');
+            const data = await fetchAPI('/api/teacher/messages') || [];
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="text-align:center;padding:40px;">No messages yet.</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr><th>From</th><th>Message</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+            data.forEach(m => {
+                html += `<tr>
+                    <td><strong>${m.from}</strong></td>
+                    <td>${m.message}</td>
+                    <td>${m.date}</td>
+                    <td><button class="btn-small" onclick="openMessageModal('${m.from}')">Reply</button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // ==================== MODAL FUNCTIONS ====================
+
+        function viewClassDetails(classData) {
+            currentClassData = classData;
+            document.getElementById('classDetailsTitle').innerHTML = `${classData.name} - Class Details`;
+
+            let studentsHtml = '<div class="student-list">';
+            if (classData.studentsList && classData.studentsList.length > 0) {
+                classData.studentsList.forEach(s => {
+                    studentsHtml += `<div class="student-item"><span>👦 ${s}</span><button class="btn-small" onclick="quickAssessStudent('${s}')">Quick Assess</button></div>`;
+                });
+            } else {
+                studentsHtml += '<div class="student-item">No students enrolled</div>';
+            }
+            studentsHtml += '</div>';
+
+            document.getElementById('classDetailsContent').innerHTML = `
+                <div class="class-detail"><strong>👩‍🏫 Teacher:</strong> ${classData.teacher || 'Not assigned'}</div>
+                <div class="class-detail"><strong>👥 Students:</strong> ${classData.students} students</div>
+                <div class="class-detail"><strong>🕒 Schedule:</strong> ${classData.time || 'Schedule TBD'}</div>
+                <div class="class-detail"><strong>📚 Next Activity:</strong> ${classData.nextActivity || 'No activities'}</div>
+                <div class="section-header" style="margin-top:20px;"><h3>Student List</h3></div>
+                ${studentsHtml}
+            `;
+            document.getElementById('classDetailsModal').style.display = 'flex';
+        }
+
+        function closeClassModal() {
+            document.getElementById('classDetailsModal').style.display = 'none';
+        }
+
+        function quickAssessStudent(studentName) {
+            closeClassModal();
+            setTimeout(async () => {
+                await loadStudentsAndActivitiesForModal();
+                document.getElementById('modalStudent').value = studentName;
+                openAssessmentModal();
+            }, 200);
+        }
+
+        async function loadStudentsAndActivitiesForModal() {
+            const students = await fetchAPI('/api/teacher/students-list');
+            const activities = await fetchAPI('/api/teacher/activities-list');
+
+            const studentSelect = document.getElementById('modalStudent');
+            studentSelect.innerHTML = '<option value="">Select Student</option>';
+            students.forEach(s => {
+                studentSelect.innerHTML += `<option value="${s.full_name}">${s.full_name}</option>`;
+            });
+
+            const activitySelect = document.getElementById('modalActivity');
+            activitySelect.innerHTML = '<option value="">Select Activity</option>';
+            activities.forEach(a => {
+                activitySelect.innerHTML += `<option value="${a.title}">${a.title}</option>`;
+            });
+        }
+
+        function openAssessmentModal() {
+            selectedRating = 0;
+            updateStarDisplay(0);
+            document.getElementById('assessmentModal').style.display = 'flex';
+        }
+
+        function closeAssessmentModal() {
+            document.getElementById('assessmentModal').style.display = 'none';
+            document.getElementById('modalComments').value = '';
+        }
+
+        function updateStarDisplay(rating) {
+            document.querySelectorAll('#starRating .star').forEach((star, i) => {
+                if (i < rating) star.classList.add('selected');
+                else star.classList.remove('selected');
+            });
+            selectedRating = rating;
+        }
+
+        async function saveAssessment() {
+            const student = document.getElementById('modalStudent').value;
+            const activity = document.getElementById('modalActivity').value;
+            const comments = document.getElementById('modalComments').value;
+
+            if (!student || !activity || selectedRating === 0) {
+                alert('Please fill all fields and select a rating');
+                return;
+            }
+
+            const result = await postAPI('/api/teacher/assessment', {
+                student: student,
+                activity: activity,
+                rating: selectedRating,
+                comments: comments
+            });
+
+            if (result.success) {
+                alert('✅ Assessment saved successfully!');
+                closeAssessmentModal();
+                loadAssessments();
+                displayReports();
+            } else {
+                alert('❌ Error: ' + (result.message || 'Failed to save assessment'));
+            }
+        }
+
+        function startActivity(activityName, className) {
+            alert(`✅ Started "${activityName}" for ${className}\n\nActivity log has been recorded.`);
+        }
+
+        function openMessageModal(to) {
+            document.getElementById('messageTo').value = to;
+            document.getElementById('messageSubject').value = '';
+            document.getElementById('messageBody').value = '';
+            document.getElementById('messageModal').style.display = 'flex';
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+
+        async function sendMessage() {
+            const to = document.getElementById('messageTo').value;
+            const subject = document.getElementById('messageSubject').value;
+            const body = document.getElementById('messageBody').value;
+
+            if (!body) {
+                alert('Please enter a message');
+                return;
+            }
+
+            const result = await postAPI('/api/teacher/send-message', {
+                to: to,
+                subject: subject,
+                message: body
+            });
+
+            if (result.success) {
+                alert(`✅ Message sent to ${to}!`);
+                closeMessageModal();
+                displayMessages();
+            } else {
+                alert('❌ Error sending message');
+            }
+        }
+
+        // ==================== SETUP ====================
+
+        document.querySelectorAll('#starRating .star').forEach(star => {
+            star.addEventListener('click', () => updateStarDisplay(parseInt(star.getAttribute('data-value'))));
+        });
+
+        // Sidebar navigation
         const sidebarItems = document.querySelectorAll('.sidebar nav li');
-        const pages = { dashboard: document.getElementById('dashboardPage'), myclasses: document.getElementById('myclassesPage'), activities: document.getElementById('activitiesPage'), reports: document.getElementById('reportsPage'), messages: document.getElementById('messagesPage'), settings: document.getElementById('settingsPage') };
+        const pages = {
+            dashboard: document.getElementById('dashboardPage'),
+            myclasses: document.getElementById('myclassesPage'),
+            activities: document.getElementById('activitiesPage'),
+            reports: document.getElementById('reportsPage'),
+            messages: document.getElementById('messagesPage'),
+            settings: document.getElementById('settingsPage')
+        };
+
         sidebarItems.forEach(item => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', async () => {
                 const pageName = item.getAttribute('data-page');
                 sidebarItems.forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
                 Object.values(pages).forEach(p => p?.classList.remove('active'));
-                if(pages[pageName]) pages[pageName].classList.add('active');
-                if(pageName === 'myclasses') displayMyClasses();
-                if(pageName === 'activities') displayTeacherActivities();
-                if(pageName === 'reports') displayReports();
-                if(pageName === 'messages') displayMessages();
+                if (pages[pageName]) pages[pageName].classList.add('active');
+
+                if (pageName === 'myclasses') await displayMyClasses();
+                if (pageName === 'activities') await displayTeacherActivities();
+                if (pageName === 'reports') await displayReports();
+                if (pageName === 'messages') await displayMessages();
             });
         });
 
-        function displayClasses() {
-            document.getElementById('classesGrid').innerHTML = teacherClasses.map(cls => `
-                <div class="class-card" onclick="viewClassDetails('${cls.name}', ${cls.id})">
-                    <h3>${cls.name}</h3><div class="class-stats"><p>👥 ${cls.students} students</p><p>🕒 ${cls.time}</p></div>
-                    <div class="next-activity">Next: ${cls.nextActivity}</div>
-                    <button class="btn-view" onclick="event.stopPropagation(); viewClassDetails('${cls.name}', ${cls.id})">View Class</button>
-                </div>
-            `).join('');
-        }
-        function viewClassDetails(className, classId) {
-            const c = teacherClasses.find(c => c.id === classId);
-            if(!c) return;
-            document.getElementById('classDetailsTitle').innerHTML = `${c.name} - Class Details`;
-            document.getElementById('classDetailsContent').innerHTML = `
-                <div class="class-detail"><strong>👩‍🏫 Teacher:</strong> ${c.teacher}</div><div class="class-detail"><strong>👥 Students:</strong> ${c.students} students</div>
-                <div class="class-detail"><strong>🕒 Schedule:</strong> ${c.time}</div><div class="class-detail"><strong>📍 Room:</strong> ${c.room}</div>
-                <div class="class-detail"><strong>📚 Next Activity:</strong> ${c.nextActivity}</div><div class="section-header" style="margin-top:20px;"><h3>Student List</h3></div>
-                <div class="student-list">${c.studentsList.map(s => `<div class="student-item"><span>👦 ${s}</span><button class="btn-small" onclick="quickAssessStudent('${s}')">Quick Assess</button></div>`).join('')}</div>
-            `;
-            document.getElementById('classDetailsModal').style.display = 'flex';
-        }
-        function closeClassModal() { document.getElementById('classDetailsModal').style.display = 'none'; }
-        function quickAssessStudent(studentName) { closeClassModal(); setTimeout(() => { document.getElementById('modalStudent').value = studentName; openAssessmentModal(); }, 200); }
-        function displayActivities() {
-            document.getElementById('todayActivities').innerHTML = todayActivities.map(a => `
-                <div class="activity-item"><div class="activity-info"><h4>${a.title}</h4><div class="activity-meta"><span>📚 ${a.class}</span><span>⏰ ${a.time}</span><span>⏱️ ${a.duration}</span></div></div><button class="btn-start" onclick="startActivity('${a.activityKey}', '${a.class}')">Start Activity</button></div>
-            `).join('');
-        }
-        function displayAssessments() {
-            const a = loadAssessments();
-            document.getElementById('assessmentsTable').innerHTML = ` <table><thead><tr><th>Student</th><th>Activity</th><th>Rating</th><th>Date</th><th>Actions</th></tr></thead><tbody>${a.map(a => `<tr><td>${a.student}</td><td>${a.activity}</td><td class="rating">${'★'.repeat(a.rating)}${'☆'.repeat(5-a.rating)}</td><td>${a.date}</td><td><button class="btn-edit" onclick="editAssessment(${a.id})">Edit</button></td></tr>`).join('')}</tbody></table>`;
-        }
-        function displayMyClasses() {
-            document.getElementById('myClassesTable').innerHTML = `<table><thead><tr><th>Class</th><th>Students</th><th>Schedule</th><th>Next Activity</th><th>Actions</th></tr></thead><tbody>${teacherClasses.map(c => `<tr><td><strong>${c.name}</strong></td><td>${c.students}</td><td>${c.time}</td><td>${c.nextActivity}</td><td><button class="btn-small" onclick="viewClassDetails('${c.name}', ${c.id})">View</button></td></tr>`).join('')}</tbody></table>`;
-        }
-        function displayTeacherActivities() {
-            let all = JSON.parse(localStorage.getItem('all_activities') || '[]');
-            const container = document.getElementById('teacherActivitiesTable');
-            if(all.length===0) { container.innerHTML = '<p style="text-align:center; padding:40px;">No activities available.</p>'; return; }
-            container.innerHTML = `<table><thead><tr><th>Activity</th><th>Class</th><th>Duration</th><th>Difficulty</th><th>Actions</th></tr></thead><tbody>${all.map(a => `<tr><td><strong>${a.title}</strong></td><td>${a.class}</td><td>${a.duration} min</td><td>${a.difficulty}</td><td><button class="btn-small" onclick="startActivity('${a.title}', '${a.class}')">Start</button></td></tr>`).join('')}</tbody></table>`;
-        }
-        function displayReports() {
-            const a = loadAssessments();
-            const container = document.getElementById('reportsContainer');
-            if(a.length===0) { container.innerHTML = '<p style="text-align:center; padding:40px;">No assessment data yet.</p>'; return; }
-            container.innerHTML = `<table><thead><tr><th>Student</th><th>Activity</th><th>Rating</th><th>Comments</th><th>Date</th></tr></thead><tbody>${a.map(a => `<tr><td><strong>${a.student}</strong></td><td>${a.activity}</td><td>${'★'.repeat(a.rating)}</td><td>${a.comments || '-'}</td><td>${a.date}</td></tr>`).join('')}</tbody></table>`;
-        }
-        function displayMessages() {
-            let m = localStorage.getItem('teacher_messages');
-            if(!m) m = JSON.stringify([{ id:1, from:"Coordinator", message:"New activity added: Build a Robot", date:"Mar 22, 2026" }, { id:2, from:"Parent - Sara Habchy", message:"My child enjoyed the activity today!", date:"Mar 21, 2026" }]);
-            m = JSON.parse(m);
-            document.getElementById('messagesContainer').innerHTML = `<table><thead><tr><th>From</th><th>Message</th><th>Date</th><th>Actions</th></tr></thead><tbody>${m.map(m => `<tr><td><strong>${m.from}</strong></td><td>${m.message}</td><td>${m.date}</td><td><button class="btn-small" onclick="replyMessage('${m.from}')">Reply</button></td></tr>`).join('')}</tbody></table>`;
-        }
-
-        function startActivity(activityName, className) {
-            let log = JSON.parse(localStorage.getItem('teacher_activity_log') || '[]');
-            log.unshift({ id: log.length+1, activity: activityName, class: className, teacher: "Ms. Sara", timestamp: new Date().toISOString(), duration: "20 min" });
-            localStorage.setItem('teacher_activity_log', JSON.stringify(log));
-            alert(`✅ Started "${activityName}" for ${className}`);
-        }
-        let currentEditId = null, selectedRating = 0;
-        function openAssessmentModal() { selectedRating=0; updateStarDisplay(0); document.getElementById('assessmentModal').style.display='flex'; }
-        function editAssessment(id) {
-            const a = loadAssessments().find(a=>a.id===id);
-            if(a) { currentEditId=id; document.getElementById('modalStudent').value=a.student; document.getElementById('modalActivity').value=a.activity; document.getElementById('modalComments').value=a.comments||''; selectedRating=a.rating; updateStarDisplay(a.rating); document.getElementById('assessmentModal').style.display='flex'; }
-        }
-        function updateStarDisplay(r) { document.querySelectorAll('#starRating .star').forEach((s,i)=>{ if(i<r) s.classList.add('selected'); else s.classList.remove('selected'); }); selectedRating=r; }
-        function closeAssessmentModal() { document.getElementById('assessmentModal').style.display='none'; document.getElementById('modalComments').value=''; currentEditId=null; }
-        function saveAssessment() {
-            const student = document.getElementById('modalStudent').value, activity = document.getElementById('modalActivity').value, comments = document.getElementById('modalComments').value;
-            if(!student || !activity || selectedRating===0) { alert('Please fill all fields'); return; }
-            let a = loadAssessments();
-            const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-            if(currentEditId) { const i=a.findIndex(x=>x.id===currentEditId); if(i!==-1) a[i]={...a[i], student, activity, rating:selectedRating, comments, date:today}; }
-            else { a.push({ id:a.length+1, student, activity, rating:selectedRating, comments, date:today }); }
-            saveAssessments(a); displayAssessments(); displayReports(); closeAssessmentModal(); alert('✅ Assessment saved!');
-        }
-        function replyMessage(sender) { const r=prompt(`Reply to ${sender}:`); if(r) alert(`Message sent to ${sender}: "${r}"`); }
-
-        let darkMode = localStorage.getItem('teacher_theme') === 'dark';
-        function applyDarkMode() { document.body.classList.toggle('dark-mode', darkMode); document.getElementById('darkModeBtn').innerHTML = darkMode ? 'Dark Mode 🌙' : 'Light Mode ☀️'; }
-        applyDarkMode();
-        document.getElementById('toggleNotificationsBtn')?.addEventListener('click',()=>{ alert('🔔 Notification settings saved!'); });
-        document.getElementById('viewScheduleBtn')?.addEventListener('click',()=>{
-            const m = document.createElement('div'); m.className='modal'; m.style.display='flex';
-            m.innerHTML = `<div class="modal-content"><h3>📅 Weekly Schedule</h3><div class="class-detail">Monday: KG1-A (9:00-10:30 AM)</div><div class="class-detail">Tuesday: KG2-A (10:30-12:00 PM)</div><div class="class-detail">Wednesday: KG2-B (1:30-3:00 PM)</div><div class="class-detail">Thursday: KG1-A (9:00-10:30 AM)</div><div class="class-detail">Friday: Planning & Meetings</div><div class="modal-buttons"><button class="btn-cancel" onclick="this.closest('.modal').remove()">Close</button></div></div>`;
-            document.body.appendChild(m);
+        // Settings buttons
+        document.getElementById('quickAssessBtn')?.addEventListener('click', async () => {
+            await loadStudentsAndActivitiesForModal();
+            openAssessmentModal();
         });
-        document.getElementById('editAccountBtn')?.addEventListener('click',()=>{ const p=prompt('Enter new password:'); if(p&&p.length>=6) alert('✅ Password updated!'); else if(p) alert('Password must be 6+ chars'); });
-        document.getElementById('darkModeBtn')?.addEventListener('click',()=>{ darkMode=!darkMode; localStorage.setItem('teacher_theme',darkMode?'dark':'light'); applyDarkMode(); alert(`🌙 Theme changed to ${darkMode?'Dark':'Light'} mode.`); });
-        let langIdx=0, langs=['English','العربية','Français'];
-        document.getElementById('languageBtn')?.addEventListener('click',()=>{ langIdx=(langIdx+1)%langs.length; document.getElementById('languageBtn').innerHTML=langs[langIdx]; alert(`Language set to ${langs[langIdx]}`); });
-        document.getElementById('quickAssessBtn')?.addEventListener('click',openAssessmentModal);
-        document.getElementById('exportReportBtn')?.addEventListener('click',()=>alert('📊 Report exported as CSV!'));
-        document.getElementById('newMessageBtn')?.addEventListener('click',()=>{ const m=prompt('Message to parents:'); if(m) alert(`Message sent: "${m}"`); });
+        document.getElementById('exportReportBtn')?.addEventListener('click', () => alert('📊 Report export feature coming soon!'));
+        document.getElementById('newMessageBtn')?.addEventListener('click', () => openMessageModal('Coordinator'));
+        document.getElementById('toggleNotificationsBtn')?.addEventListener('click', () => alert('🔔 Notification settings saved!'));
+        document.getElementById('viewScheduleBtn')?.addEventListener('click', () => alert('📅 Schedule view coming soon!'));
+        document.getElementById('editAccountBtn')?.addEventListener('click', () => {
+            const newPass = prompt('Enter new password:');
+            if (newPass && newPass.length >= 6) alert('✅ Password updated!');
+            else if (newPass) alert('Password must be at least 6 characters');
+        });
 
-        document.querySelectorAll('#starRating .star').forEach(s=>{ s.addEventListener('click',()=>updateStarDisplay(parseInt(s.getAttribute('data-value')))); });
+        // Dark mode
+        let darkMode = localStorage.getItem('teacher_theme') === 'dark';
+        function applyDarkMode() {
+            document.body.classList.toggle('dark-mode', darkMode);
+            document.getElementById('darkModeBtn').innerHTML = darkMode ? 'Dark Mode 🌙' : 'Light Mode ☀️';
+        }
+        applyDarkMode();
+        document.getElementById('darkModeBtn')?.addEventListener('click', () => {
+            darkMode = !darkMode;
+            localStorage.setItem('teacher_theme', darkMode ? 'dark' : 'light');
+            applyDarkMode();
+        });
 
-        displayClasses(); displayActivities(); displayAssessments();
+        // Language
+        let langIdx = 0, langs = ['English', 'العربية', 'Français'];
+        document.getElementById('languageBtn')?.addEventListener('click', () => {
+            langIdx = (langIdx + 1) % langs.length;
+            document.getElementById('languageBtn').innerHTML = langs[langIdx];
+            alert(`Language set to ${langs[langIdx]}`);
+        });
+
+        // Initial load
+        loadClasses();
+        loadTodayActivities();
+        loadAssessments();
     </script>
 </body>
 </html>

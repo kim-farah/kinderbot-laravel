@@ -5,6 +5,8 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\CoordinatorController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ClassController;
+use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\ParentController;
 
 // Login routes
 Route::get('/', function () {
@@ -20,13 +22,6 @@ Route::get('/logout', function () {
 
 // Dashboard routes
 Route::get('/coordinator', [CoordinatorController::class, 'dashboard'])->name('coordinator');
-Route::get('/teacher', function () {
-    return view('teacher');
-})->name('teacher');
-
-Route::get('/parent', function () {
-    return view('parent');
-})->name('parent');
 
 // Create activity page
 Route::get('/create-activity', function () {
@@ -101,3 +96,33 @@ Route::delete('/api/classes/{id}', [ClassController::class, 'destroy']);
 
 // Activity routes
 Route::get('/api/activities', [ActivityController::class, 'index']);
+Route::get('/api/teacher-activity-log', [CoordinatorController::class, 'getTeacherActivityLog']);
+
+// Teacher routes
+Route::get('/teacher', [TeacherController::class, 'dashboard'])->name('teacher');
+Route::get('/api/teacher/classes', [TeacherController::class, 'getMyClasses']);
+Route::get('/api/teacher/today-activities', [TeacherController::class, 'getTodayActivities']);
+Route::get('/api/teacher/all-activities', [TeacherController::class, 'getAllActivities']);
+Route::get('/api/teacher/assessments', [TeacherController::class, 'getAssessments']);
+Route::post('/api/teacher/assessment', [TeacherController::class, 'storeAssessment']);
+Route::get('/api/teacher/students-list', [TeacherController::class, 'getStudentsList']);
+Route::get('/api/teacher/activities-list', [TeacherController::class, 'getActivitiesList']);
+
+// Parent route
+Route::get('/parent', [ParentController::class, 'dashboard'])->name('parent');
+Route::get('/api/parent/children', [ParentController::class, 'getChildren']);
+Route::get('/api/parent/child/{childId}/activities', [ParentController::class, 'getChildActivities']);
+Route::get('/api/parent/child/{childId}/progress', [ParentController::class, 'getChildProgress']);
+Route::get('/api/parent/child/{childId}/notes', [ParentController::class, 'getChildNotes']);
+Route::get('/api/parent/messages', [ParentController::class, 'getMessages']);
+Route::post('/api/parent/send-message', [ParentController::class, 'sendMessage']);
+
+/*
+Route::get('/teacher', function () {
+    return view('teacher');
+})->name('teacher');
+
+Route::get('/parent', function () {
+    return view('parent');
+})->name('parent');
+*/

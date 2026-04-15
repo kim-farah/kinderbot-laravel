@@ -375,313 +375,318 @@
     </div>
 
     <script>
-        let activities = [
-            { id: 1, activity: "See Saw", class: "KG1", date: "Mar 25, 2026", status: "in_progress" },
-            { id: 2, activity: "Direction Car", class: "KG1", date: "Mar 5, 2026", status: "completed" },
-            { id: 3, activity: "Spinning Top", class: "KG1", date: "Feb 27, 2026", status: "completed" }
-        ];
+    // Get parent name from Laravel
+    const parentName = @json($parentName);
+    document.querySelector('.user-info span').innerHTML = `👤 ${parentName}`;
 
-        let notes = [
-            { id: 1, teacher: "Ms. Sara", date: "Mar 5, 2026", message: "Elie did great with building and directing the car today! He identified all directions possible." },
-            { id: 2, teacher: "Ms. Sara", date: "Feb 27, 2026", message: "Please practice building the spinner at home this weekend." }
-        ];
+    let currentChildId = null;
 
-        let messages = [
-            { id: 1, from: "Ms. Sara", message: "Your child did great with the robot activity today!", date: "Mar 22, 2026" },
-            { id: 2, from: "Coordinator", message: "Parent-teacher meeting scheduled for April 5th.", date: "Mar 20, 2026" }
-        ];
+    // ==================== LOAD REAL DATA FROM API ====================
 
-        let childData = { name: "Elie Nassour", class: "KG1 - Section A", progress: 65 };
-
-        const sidebarItems = document.querySelectorAll('.sidebar nav li');
-        const pages = {
-            dashboard: document.getElementById('dashboardPage'),
-            mychild: document.getElementById('mychildPage'),
-            activities: document.getElementById('activitiesPage'),
-            messages: document.getElementById('messagesPage'),
-            settings: document.getElementById('settingsPage')
-        };
-
-        sidebarItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const pageName = item.getAttribute('data-page');
-                sidebarItems.forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                Object.values(pages).forEach(p => p?.classList.remove('active'));
-                if (pages[pageName]) pages[pageName].classList.add('active');
-                if (pageName === 'mychild') displayChildProfileFull();
-                if (pageName === 'activities') displayAllActivities();
-                if (pageName === 'messages') displayMessages();
+    async function fetchAPI(url) {
+        try {
+            const response = await fetch(url, {
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
             });
+            return await response.json();
+        } catch (error) {
+            console.error('API Error:', error);
+            return [];
+        }
+    }
+
+    // Load child data and display dashboard
+    async function loadChildData() {
+        const children = await fetchAPI('/api/parent/children');
+
+        if (children.length === 0) {
+            document.getElementById('childName').innerHTML = 'No child linked';
+            document.getElementById('childClass').innerHTML = 'Please contact school';
+            return;
+        }
+
+        const child = children[0]; // First child (can support multiple later)
+        currentChildId = child.id;
+
+        // Update profile section
+        document.getElementById('childName').innerHTML = child.full_name;
+        document.getElementById('childClass').innerHTML = child.class || 'Not enrolled';
+
+        // Load progress
+        const progress = await fetchAPI(`/api/parent/child/${child.id}/progress`);
+        document.getElementById('progressPercent').innerHTML = `${progress.progress || 0}%`;
+        document.getElementById('progressFill').style.width = `${progress.progress || 0}%`;
+        document.getElementById('completedCount').innerHTML = progress.completedCount || 0;
+        document.getElementById('avgRating').innerHTML = progress.avgRating || 0;
+        document.getElementById('notesCount').innerHTML = progress.notesCount || 0;
+
+        // Load activities
+        await loadChildActivities(child.id);
+
+        // Load notes
+        await loadChildNotes(child.id);
+    }
+
+    async function loadChildActivities(childId) {
+        const activities = await fetchAPI(`/api/parent/child/${childId}/activities`);
+        const container = document.getElementById('activitiesTable');
+
+        if (activities.length === 0) {
+            container.innerHTML = '<p style="text-align: center; padding: 40px;">No activities yet.</p>';
+            return;
+        }
+
+        let html = '<table class="data-table"><thead><tr><th>Activity</th><th>Date</th><th>Status</th><th>Rating</th></tr></thead><tbody>';
+        activities.forEach(a => {
+            const statusClass = a.status === 'completed' ? 'status-completed' : 'status-progress';
+            const statusText = a.status === 'completed' ? '✅ Completed' : '🔄 In Progress';
+            const stars = '★'.repeat(a.rating) + '☆'.repeat(5 - a.rating);
+            html += `<tr>
+                <td><strong>${a.activity}</strong></td>
+                <td>${a.date}</td>
+                <td class="${statusClass}">${statusText}</td>
+                <td>${stars}</td>
+            </tr>`;
         });
-        function displayStats() {
-            const completed = activities.filter(a => a.status === 'completed').length;
-            document.getElementById('completedCount').innerHTML = completed;
-            document.getElementById('avgRating').innerHTML = '4.2';
-            document.getElementById('notesCount').innerHTML = notes.length;
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    async function loadChildNotes(childId) {
+        const notes = await fetchAPI(`/api/parent/child/${childId}/notes`);
+        const container = document.getElementById('notesList');
+
+        if (notes.length === 0) {
+            container.innerHTML = '<p style="text-align: center; padding: 40px;">No notes from teacher yet.</p>';
+            return;
         }
 
-        function displayActivitiesTable() {
-            const container = document.getElementById('activitiesTable');
-            if (!container) return;
-
-            if (activities.length === 0) {
-                container.innerHTML = '<p style="text-align: center; padding: 40px;">No activities yet.</p>';
-                return;
-            }
-
-            let html = '<table class="data-table">';
-            html += '<thead>\
-                        <tr>\
-                            <th>Activity</th>\
-                            <th>Class</th>\
-                            <th>Date</th>\
-                            <th>Status</th>\
-                        </tr>\
-                    </thead>';
-            html += '<tbody>';
-
-            activities.forEach(a => {
-                const statusClass = a.status === 'completed' ? 'status-completed' : 'status-progress';
-                const statusText = a.status === 'completed' ? '✅ Completed' : '🔄 In Progress';
-                html += '<tr>';
-                html += `<td><strong>${a.activity}</strong></td>`;
-                html += `<td>${a.class}</td>`;
-                html += `<td>${a.date}</td>`;
-                html += `<td class="${statusClass}">${statusText}</td>`;
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-
-        function displayNotes() {
-            const container = document.getElementById('notesList');
-            if (!container) return;
-
-            if (notes.length === 0) {
-                container.innerHTML = '<p style="text-align: center; padding: 40px;">No notes from teacher yet.</p>';
-                return;
-            }
-
-            container.innerHTML = notes.map(n => `
-                <div class="note-card">
-                    <div class="note-header">
-                        <span class="note-teacher">👩‍🏫 ${n.teacher}</span>
-                        <span class="note-date">${n.date}</span>
-                    </div>
-                    <div class="note-message">"${n.message}"</div>
+        container.innerHTML = notes.map(n => `
+            <div class="note-card">
+                <div class="note-header">
+                    <span class="note-teacher">👩‍🏫 ${n.teacher}</span>
+                    <span class="note-date">${n.date}</span>
                 </div>
-            `).join('');
+                <div class="note-message">"${n.message}"</div>
+            </div>
+        `).join('');
+    }
+
+    // ==================== MY CHILD PAGE ====================
+
+    async function displayChildProfileFull() {
+        const children = await fetchAPI('/api/parent/children');
+        if (children.length === 0) {
+            document.getElementById('childProfileFull').innerHTML = '<p style="text-align:center;padding:40px;">No child linked</p>';
+            return;
         }
 
-        function displayChildProfileFull() {
-            const container = document.getElementById('childProfileFull');
-            const completed = activities.filter(a => a.status === 'completed').length;
+        const child = children[0];
+        const progress = await fetchAPI(`/api/parent/child/${child.id}/progress`);
 
-            let html = '<table class="data-table">';
-            html += '<tbody>';
-            html += `<tr><td style="width:150px"><strong>Name</strong></td><td>${childData.name}</td></tr>`;
-            html += `<tr><td><strong>Class</strong></td><td>${childData.class}</td></tr>`;
-            html += `<tr><td><strong>Overall Progress</strong></td><td>${childData.progress}% <div style="background:#e0e0e0;border-radius:10px;height:6px;margin-top:5px;"><div style="background:var(--orange);width:${childData.progress}%;height:6px;border-radius:10px;"></div></div></td></tr>`;
-            html += `<tr><td><strong>Completed Activities</strong></td><td>${completed}</td></tr>`;
-            html += `<tr><td><strong>Teacher</strong></td><td>Ms. Sara</td></tr>`;
-            html += '</tbody></table>';
-            container.innerHTML = html;
+        let html = '<table class="data-table"><tbody>';
+        html += `<tr><td style="width:150px"><strong>Name</strong></td><td>${child.full_name}</td></tr>`;
+        html += `<tr><td><strong>Date of Birth</strong></td><td>${child.date_of_birth || '-'}</td></tr>`;
+        html += `<tr><td><strong>Age</strong></td><td>${child.age || '-'} years</td></tr>`;
+        html += `<tr><td><strong>Class</strong></td><td>${child.class || 'Not enrolled'}</td></tr>`;
+        html += `<tr><td><strong>Teacher</strong></td><td>${child.teacher || 'Not assigned'}</td></tr>`;
+        html += `<tr><td><strong>Overall Progress</strong></td><td>${progress.progress || 0}% <div style="background:#e0e0e0;border-radius:10px;height:6px;margin-top:5px;"><div style="background:var(--orange);width:${progress.progress || 0}%;height:6px;border-radius:10px;"></div></div></td></tr>`;
+        html += `<tr><td><strong>Completed Activities</strong></td><td>${progress.completedCount || 0}</td></tr>`;
+        html += '</tbody></table>';
+        document.getElementById('childProfileFull').innerHTML = html;
+    }
+
+    // ==================== ALL ACTIVITIES PAGE ====================
+
+    async function displayAllActivities() {
+        if (!currentChildId) {
+            const children = await fetchAPI('/api/parent/children');
+            if (children.length > 0) currentChildId = children[0].id;
         }
 
-        function displayAllActivities() {
-            const container = document.getElementById('allActivitiesTable');
-            if (!container) return;
-
-            if (activities.length === 0) {
-                container.innerHTML = '<p style="text-align: center; padding: 40px;">No activities yet.</p>';
-                return;
-            }
-
-            let html = '<table class="data-table">';
-            html += '<thead><tr><th>Activity</th><th>Date</th><th>Status</th></tr></thead>';
-            html += '<tbody>';
-
-            activities.forEach(a => {
-                const statusClass = a.status === 'completed' ? 'status-completed' : 'status-progress';
-                const statusText = a.status === 'completed' ? '✅ Completed' : '🔄 In Progress';
-                html += '<tr>';
-                html += `<td><strong>${a.activity}</strong></td>`;
-                html += `<td>${a.date}</td>`;
-                html += `<td class="${statusClass}">${statusText}</td>`;
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
-            container.innerHTML = html;
+        if (!currentChildId) {
+            document.getElementById('allActivitiesTable').innerHTML = '<p style="text-align:center;padding:40px;">No child linked</p>';
+            return;
         }
 
-        function displayMessages() {
-            const container = document.getElementById('messagesContainer');
-            if (!container) return;
+        const activities = await fetchAPI(`/api/parent/child/${currentChildId}/activities`);
+        const container = document.getElementById('allActivitiesTable');
 
-            if (messages.length === 0) {
-                container.innerHTML = '<p style="text-align: center; padding: 40px;">No messages yet.</p>';
-                return;
-            }
-
-            let html = '<table class="data-table">';
-            html += '<thead><tr><th>From</th><th>Message</th><th>Date</th><th>Actions</th></tr></thead>';
-            html += '<tbody>';
-
-            messages.forEach(m => {
-                html += '<tr>';
-                html += `<td><strong>${m.from}</strong></td>`;
-                html += `<td>${m.message}</td>`;
-                html += `<td>${m.date}</td>`;
-                html += `<td><button class="btn-small" onclick="openMessageModal('${m.from}')">Reply</button></td>`;
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        }
-        let currentReplyTo = '';
-
-        function openMessageModal(to) {
-            currentReplyTo = to;
-            document.getElementById('messageTo').value = to;
-            document.getElementById('messageSubject').value = '';
-            document.getElementById('messageBody').value = '';
-            document.getElementById('messageModal').style.display = 'flex';
+        if (activities.length === 0) {
+            container.innerHTML = '<p style="text-align: center; padding: 40px;">No activities yet.</p>';
+            return;
         }
 
-        function closeMessageModal() {
-            document.getElementById('messageModal').style.display = 'none';
+        let html = '<table class="data-table"><thead><tr><th>Activity</th><th>Date</th><th>Status</th><th>Rating</th></tr></thead><tbody>';
+        activities.forEach(a => {
+            const statusClass = a.status === 'completed' ? 'status-completed' : 'status-progress';
+            const statusText = a.status === 'completed' ? '✅ Completed' : '🔄 In Progress';
+            const stars = '★'.repeat(a.rating) + '☆'.repeat(5 - a.rating);
+            html += `<tr>
+                <td><strong>${a.activity}</strong></td>
+                <td>${a.date}</td>
+                <td class="${statusClass}">${statusText}</td>
+                <td>${stars}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    // ==================== MESSAGES ====================
+
+    async function displayMessages() {
+        const messages = await fetchAPI('/api/parent/messages');
+        const container = document.getElementById('messagesContainer');
+
+        if (messages.length === 0) {
+            container.innerHTML = '<p style="text-align: center; padding: 40px;">No messages yet.</p>';
+            return;
         }
 
-        function sendMessage() {
-            const subject = document.getElementById('messageSubject').value;
-            const body = document.getElementById('messageBody').value;
-            if (!body) {
-                alert('Please enter a message');
-                return;
-            }
-            messages.unshift({
-                id: messages.length + 1,
-                from: "You",
-                message: body,
-                date: new Date().toLocaleDateString()
-            });
-            displayMessages();
+        let html = '<table class="data-table"><thead><tr><th>From</th><th>Message</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
+        messages.forEach(m => {
+            html += `<tr>
+                <td><strong>${m.from}</strong></td>
+                <td>${m.message}</td>
+                <td>${m.date}</td>
+                <td><button class="btn-small" onclick="openMessageModal('${m.from}')">Reply</button></td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    async function sendMessageToTeacher() {
+        const subject = document.getElementById('messageSubject').value;
+        const body = document.getElementById('messageBody').value;
+
+        if (!body) {
+            alert('Please enter a message');
+            return;
+        }
+
+        const response = await fetch('/api/parent/send-message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ subject: subject, message: body })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert('✅ Message sent successfully!');
             closeMessageModal();
-            alert(`✅ Message sent to ${currentReplyTo}!\n\nSubject: ${subject || 'No subject'}\nMessage: ${body}`);
+            displayMessages();
+        } else {
+            alert('❌ Error sending message');
         }
+    }
 
-        let darkMode = localStorage.getItem('parent_theme') === 'dark';
+    // ==================== SIDEBAR NAVIGATION ====================
 
-        function applyDarkMode() {
-            document.body.classList.toggle('dark-mode', darkMode);
-            document.getElementById('darkModeBtn').innerHTML = darkMode ? 'Dark Mode 🌙' : 'Light Mode ☀️';
-        }
+    const sidebarItems = document.querySelectorAll('.sidebar nav li');
+    const pages = {
+        dashboard: document.getElementById('dashboardPage'),
+        mychild: document.getElementById('mychildPage'),
+        activities: document.getElementById('activitiesPage'),
+        messages: document.getElementById('messagesPage'),
+        settings: document.getElementById('settingsPage')
+    };
+
+    sidebarItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const pageName = item.getAttribute('data-page');
+            sidebarItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            Object.values(pages).forEach(p => p?.classList.remove('active'));
+            if (pages[pageName]) pages[pageName].classList.add('active');
+            if (pageName === 'mychild') displayChildProfileFull();
+            if (pageName === 'activities') displayAllActivities();
+            if (pageName === 'messages') displayMessages();
+        });
+    });
+
+    // ==================== MODAL FUNCTIONS ====================
+
+    function openMessageModal(to) {
+        document.getElementById('messageTo').value = to;
+        document.getElementById('messageSubject').value = '';
+        document.getElementById('messageBody').value = '';
+        document.getElementById('messageModal').style.display = 'flex';
+    }
+
+    function closeMessageModal() {
+        document.getElementById('messageModal').style.display = 'none';
+    }
+
+    function sendMessage() {
+        sendMessageToTeacher();
+    }
+
+    // ==================== SETTINGS BUTTONS ====================
+
+    document.getElementById('newMessageBtn')?.addEventListener('click', () => openMessageModal('Teacher'));
+    document.getElementById('notificationsBtn')?.addEventListener('click', () => alert('🔔 Notification preferences saved!'));
+
+    document.getElementById('darkModeBtn')?.addEventListener('click', () => {
+        darkMode = !darkMode;
+        localStorage.setItem('parent_theme', darkMode ? 'dark' : 'light');
         applyDarkMode();
+    });
 
-        document.getElementById('notificationsBtn')?.addEventListener('click', () => {
-            alert('🔔 Notification preferences saved!');
-        });
+    document.getElementById('privacyBtn')?.addEventListener('click', () => document.getElementById('privacyModal').style.display = 'flex');
+    document.getElementById('changePasswordBtn')?.addEventListener('click', () => document.getElementById('passwordModal').style.display = 'flex');
 
-        document.getElementById('darkModeBtn')?.addEventListener('click', () => {
-            darkMode = !darkMode;
-            localStorage.setItem('parent_theme', darkMode ? 'dark' : 'light');
-            applyDarkMode();
-            alert(`Theme changed to ${darkMode ? 'Dark' : 'Light'} mode.`);
-        });
+    // Dark mode
+    let darkMode = localStorage.getItem('parent_theme') === 'dark';
+    function applyDarkMode() {
+        document.body.classList.toggle('dark-mode', darkMode);
+        const btn = document.getElementById('darkModeBtn');
+        if (btn) btn.innerHTML = darkMode ? 'Dark Mode 🌙' : 'Light Mode ☀️';
+    }
+    applyDarkMode();
 
-        let langIdx = 0;
-        const languages = ['English', 'العربية', 'Français'];
-        document.getElementById('languageBtn')?.addEventListener('click', () => {
-            langIdx = (langIdx + 1) % languages.length;
-            document.getElementById('languageBtn').innerHTML = languages[langIdx];
-            let message = '';
-            if (languages[langIdx] === 'English') message = 'Language set to English';
-            else if (languages[langIdx] === 'العربية') message = 'تم تغيير اللغة إلى العربية';
-            else message = 'Langue changée en Français';
-            alert(message);
-        });
+    // Language
+    let langIdx = 0;
+    const languages = ['English', 'العربية', 'Français'];
+    document.getElementById('languageBtn')?.addEventListener('click', () => {
+        langIdx = (langIdx + 1) % languages.length;
+        document.getElementById('languageBtn').innerHTML = languages[langIdx];
+        alert(`Language set to ${languages[langIdx]}`);
+    });
 
-        document.getElementById('privacyBtn')?.addEventListener('click', () => {
-            document.getElementById('privacyModal').style.display = 'flex';
-        });
+    // Email notifications
+    let emailIdx = 0;
+    const emailOptions = ['Weekly Digest', 'Daily Updates', 'Real-time', 'Never'];
+    document.getElementById('emailNotifBtn')?.addEventListener('click', () => {
+        emailIdx = (emailIdx + 1) % emailOptions.length;
+        document.getElementById('emailNotifBtn').innerHTML = emailOptions[emailIdx];
+        alert(`📧 Email notifications set to: ${emailOptions[emailIdx]}`);
+    });
 
-        function closePrivacyModal() {
-            document.getElementById('privacyModal').style.display = 'none';
-        }
+    // Password change
+    function closePasswordModal() { document.getElementById('passwordModal').style.display = 'none'; }
+    function changePassword() {
+        const newPass = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+        if (!newPass || !confirm) { alert('Please fill all fields'); return; }
+        if (newPass !== confirm) { alert('Passwords do not match'); return; }
+        if (newPass.length < 6) { alert('Password must be at least 6 characters'); return; }
+        alert('✅ Password changed successfully!');
+        closePasswordModal();
+    }
 
-        function savePrivacySettings() {
-            const shareData = document.getElementById('shareData').checked;
-            const shareProgress = document.getElementById('shareProgress').checked;
-            alert(`🔒 Privacy settings saved!\n\nShare analytics: ${shareData ? 'Yes' : 'No'}\nShare progress: ${shareProgress ? 'Yes' : 'No'}`);
-            closePrivacyModal();
-        }
+    function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
+    function savePrivacySettings() {
+        alert('🔒 Privacy settings saved!');
+        closePrivacyModal();
+    }
 
-        let emailIdx = 0;
-        const emailOptions = ['Weekly Digest', 'Daily Updates', 'Real-time', 'Never'];
-        document.getElementById('emailNotifBtn')?.addEventListener('click', () => {
-            emailIdx = (emailIdx + 1) % emailOptions.length;
-            document.getElementById('emailNotifBtn').innerHTML = emailOptions[emailIdx];
-            alert(`📧 Email notification frequency set to: ${emailOptions[emailIdx]}`);
-        });
-
-        document.getElementById('changePasswordBtn')?.addEventListener('click', () => {
-            document.getElementById('passwordModal').style.display = 'flex';
-        });
-
-        function closePasswordModal() {
-            document.getElementById('passwordModal').style.display = 'none';
-        }
-
-        function changePassword() {
-            const current = document.getElementById('currentPassword').value;
-            const newPass = document.getElementById('newPassword').value;
-            const confirm = document.getElementById('confirmPassword').value;
-
-            if (!current || !newPass || !confirm) {
-                alert('Please fill all fields');
-                return;
-            }
-            if (newPass !== confirm) {
-                alert('New passwords do not match');
-                return;
-            }
-            if (newPass.length < 6) {
-                alert('Password must be at least 6 characters');
-                return;
-            }
-            alert('✅ Password changed successfully!');
-            closePasswordModal();
-            document.getElementById('currentPassword').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmPassword').value = '';
-        }
-
-        document.getElementById('deleteAccountBtn')?.addEventListener('click', () => {
-            const confirm1 = confirm('⚠️ WARNING: This will permanently delete your account and all data.\n\nAre you sure you want to continue?');
-            if (!confirm1) return;
-            const confirm2 = confirm('❗ LAST CHANCE: This action cannot be undone.\n\nClick OK to confirm deletion.');
-            if (!confirm2) return;
-            const confirmText = prompt('Type "DELETE" to permanently delete your account:');
-            if (confirmText === 'DELETE') {
-                alert('🗑️ Your account has been scheduled for deletion. You will be logged out.');
-                localStorage.clear();
-                window.location.href = 'login.html';
-            } else {
-                alert('Account deletion cancelled.');
-            }
-        });
-
-        document.getElementById('newMessageBtn')?.addEventListener('click', () => {
-            openMessageModal('Teacher');
-        });
-        displayStats();
-        displayActivitiesTable();
-        displayNotes();
-    </script>
+    // Initial load
+    loadChildData();
+</script>
 </body>
 </html>

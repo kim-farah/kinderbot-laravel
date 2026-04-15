@@ -23,7 +23,8 @@ class CoordinatorController extends Controller
         ]);
     }
 
-    /**
+    // ==================== HELPER METHODS ====================
+/**
  * Generate a random secure password
  */
 private function generateRandomPassword($length = 10)
@@ -31,9 +32,6 @@ private function generateRandomPassword($length = 10)
     $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
     return substr(str_shuffle($chars), 0, $length);
 }
-
-    // ==================== HELPER METHODS ====================
-
     /**
      * Calculate current age based on date of birth.
      */
@@ -354,29 +352,38 @@ private function generateRandomPassword($length = 10)
     }
 
     public function storeTeacher(Request $request)
-    {
-        try {
-            $userId = DB::table('users')->insertGetId([
-                'email' => $request->email ?: strtolower(str_replace(' ', '.', $request->full_name)) . '@teacher.kinderbot.com',
-                'password' => bcrypt('password123'),
-                'role_id' => 2,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            DB::table('teachers')->insert([
-                'user_id' => $userId,
-                'full_name' => $request->full_name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()]);
-        }
+{
+    try {
+        $plainPassword = $this->generateRandomPassword();
+
+        $userId = DB::table('users')->insertGetId([
+            'email' => $request->email ?: strtolower(str_replace(' ', '.', $request->full_name)) . '@teacher.kinderbot.com',
+            'password' => bcrypt($plainPassword),
+            'role_id' => 2,  // Teacher role
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('teachers')->insert([
+            'user_id' => $userId,
+            'full_name' => $request->full_name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Return the password so coordinator can see it
+        return response()->json([
+            'success' => true,
+            'password' => $plainPassword,
+            'email' => $request->email ?: strtolower(str_replace(' ', '.', $request->full_name)) . '@teacher.kinderbot.com'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
     }
+}
 
     public function getTeachersList()
     {
@@ -422,32 +429,41 @@ private function generateRandomPassword($length = 10)
     }
 
     public function storeParent(Request $request)
-    {
-        try {
-            if (!$request->email) {
-                return response()->json(['success' => false, 'message' => 'Email is required']);
-            }
-            $userId = DB::table('users')->insertGetId([
-                'email' => $request->email,
-                'password' => bcrypt('password123'),
-                'role_id' => 3,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            DB::table('parents')->insert([
-                'user_id' => $userId,
-                'full_name' => $request->full_name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+{
+    try {
+        if (!$request->email) {
+            return response()->json(['success' => false, 'message' => 'Email is required']);
         }
+
+        $plainPassword = $this->generateRandomPassword();
+
+        $userId = DB::table('users')->insertGetId([
+            'email' => $request->email,
+            'password' => bcrypt($plainPassword),
+            'role_id' => 3,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('parents')->insert([
+            'user_id' => $userId,
+            'full_name' => $request->full_name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'password' => $plainPassword,
+            'email' => $request->email
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
     }
+}
 
     public function storeParentWithChild(Request $request)
     {
@@ -617,4 +633,13 @@ public function getSection($id)
     }
 }
 
+public function getTeacherActivityLog()
+{
+    $logs = DB::table('teacher_activity_log')
+        ->orderBy('timestamp', 'desc')
+        ->take(10)
+        ->get();
+
+    return response()->json($logs);
+}
 }
