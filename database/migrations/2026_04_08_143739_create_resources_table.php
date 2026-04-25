@@ -11,14 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notes', function (Blueprint $table) {
+        Schema::create('resources', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('student_id')->constrained()->cascadeOnDelete();
-        $table->foreignId('teacher_id')->constrained('teachers')->cascadeOnDelete();
-        $table->text('content');
-        $table->string('type')->default('note');
+        $table->foreignId('activity_id')->constrained()->cascadeOnDelete();
+        $table->string('title');
+        $table->string('file_path');
+        //$table->string('file_type')->nullable();
+        //$table->foreignId('uploaded_by')->constrained('users');
         $table->timestamps();
-    });
+        });
     }
 
     /**
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notes');
+        Schema::dropIfExists('resources');
     }
 };

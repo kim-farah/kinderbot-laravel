@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Competency extends Model
 {
-    protected $fillable = ['chapter_id', 'name', 'description'];
+    protected $fillable = ['activity_id', 'name', 'description'];
     
     public function chapter() {
-        return $this->belongsTo(Chapter::class);
+        return $this->belongsTo(Activity::class);
     }
 
     public function assessments() {

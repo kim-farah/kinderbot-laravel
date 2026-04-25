@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Teacher extends Model
 {
 
-    protected $fillable = ['user_id', 'full_name'];
+    protected $fillable = ['user_id', 'full_name', 'phone', 'qualification', 'hire_date', 'email'];
 
     public function user() {
         return $this->belongsTo(User::class);
@@ -17,7 +17,7 @@ class Teacher extends Model
         return $this->hasMany(Section::class);
     }
 
-    public function notes() {
-        return $this->hasMany(Note::class);
+    public function assessments() {
+        return $this->hasMany(Assessment::class);
     }
 }

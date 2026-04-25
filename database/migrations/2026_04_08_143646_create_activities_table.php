@@ -13,12 +13,14 @@ return new class extends Migration
             $table->foreignId('class_id')->constrained()->cascadeOnDelete();  // Changed from chapter_id
             $table->string('title');
             $table->text('objective')->nullable();
-            $table->text('materials_needed')->nullable();  // Changed from materials
-            $table->text('instructions')->nullable();
-            $table->integer('estimated_duration')->nullable();
-            $table->string('difficulty_level')->nullable();  // Added
-            $table->boolean('is_published')->default(false);  // Added
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();  // Added
+            $table->text('materials')->nullable();  // Changed from materials
+            //$table->text('instructions')->nullable();
+            //$table->integer('estimated_duration')->nullable();
+            //$table->string('difficulty_level')->nullable();  // Added
+            //$table->boolean('is_published')->default(false);  // Added
+            //$table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();  // Added
+            $table->text('overview');
+            $table->text('skills_competencies');
             $table->timestamps();
         });
     }

@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('competencies', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('activity_id')->constrained()->cascadeOnDelete();
-        $table->string('name');
-        $table->text('description')->nullable();
-    });
+        Schema::create('activity_completion_statuses', function (Blueprint $table) {
+            $table->id();
+            $table->string('description');
+            $table->timestamps();
+        });
     }
 
     /**
@@ -24,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('competencies');
+        Schema::dropIfExists('activity_completion_statuses');
     }
 };

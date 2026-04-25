@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('section_id')->constrained()->cascadeOnDelete();
             $table->date('enrollment_date')->nullable();
             $table->string('status')->default('active');
+            $table->string('notes');
             $table->timestamps();
         });
     }

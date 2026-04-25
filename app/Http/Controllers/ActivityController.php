@@ -52,4 +52,12 @@ class ActivityController extends Controller
 
         return response()->json($activities);
     }
+
+    public function show($id)
+    {
+        $activity = Activity::with(['resources', 'steps'])
+                ->findOrFail($id);
+
+        return view('activities.show', compact('activity'));
+    }
 }

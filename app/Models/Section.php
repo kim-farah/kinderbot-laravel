@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Section extends Model
 {
-    protected $fillable = ['class_id', 'teacher_id', 'name'];
+    protected $fillable = ['class_id', 'teacher_id', 'name', 'is_active', 'max_students'];
     
     public function class() {
         return $this->belongsTo(ClassModel::class);

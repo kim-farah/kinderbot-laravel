@@ -101,3 +101,10 @@ Route::delete('/api/classes/{id}', [ClassController::class, 'destroy']);
 
 // Activity routes
 Route::get('/api/activities', [ActivityController::class, 'index']);
+
+Route::get('/activities/{id}', [ActivityController::class, 'show'])
+    ->name('activities.show');
+
+Route::get('/activities/{activity}/sections/{section}/assessment',
+ [AssessmentController::class,'show'])
+ ->name('activities.assessment');

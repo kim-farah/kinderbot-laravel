@@ -7,19 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 class Activity extends Model
 {
     protected $fillable = [
-    'chapter_id',
+    'class_id',
     'title',
     'objective',
-    'instructions',
-    'teacher_notes'
+    'materials',
+    'overview',
+    'skill_competencies',
     ];
 
-    public function chapter() {
-        return $this->belongsTo(Chapter::class);
+    public function class() {
+        return $this->belongsTo(ClassModel::class);
     }
 
     public function resources() {
-        return $this->hasMany(ActivityResource::class);
+        return $this->hasMany(Resource::class);
     }
 
     public function completions() {
@@ -29,4 +30,18 @@ class Activity extends Model
     public function assessments() {
         return $this->hasMany(Assessment::class);
     }
-}
+
+    public function steps()
+    {
+        return $this->hasMany(ActivityStep::class);
+    }
+
+    public function competencies()
+    {
+    return $this->belongsToMany(
+    Competency::class,
+    'activity_competency'
+    );
+    }
+
+    }

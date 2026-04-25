@@ -24,7 +24,7 @@ class Student extends Model
         return $this->hasMany(ActivityCompletion::class);
     }
 
-    public function notes() {
-        return $this->hasMany(Note::class);
+    public function studentParents() {
+        return $this->hasMany(StudentParent::class);
     }
 }

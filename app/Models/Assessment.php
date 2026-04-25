@@ -10,8 +10,8 @@ class Assessment extends Model
     'student_id',
     'teacher_id',
     'competency_id',
-    'score',
-    'notes'
+    'rating',
+    'comments'
     ];
 
     public function student() {

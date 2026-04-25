@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ClassModel extends Model
 {
 
-    protected $fillable = ['program_id', 'name', 'grade_level', 'order_index', 'is_active'];
+    protected $fillable = ['program_id', 'name', 'grade_level', 'description', 'is_active'];
 
     public function program() {
         return $this->belongsTo(Program::class);
@@ -18,7 +18,7 @@ class ClassModel extends Model
     }
 
     public function chapters() {
-        return $this->hasMany(Chapter::class);
+        return $this->hasMany(Activity::class);
     }
 
 }
