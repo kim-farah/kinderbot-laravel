@@ -265,6 +265,158 @@
         body.dark-mode .btn-view { border-color: var(--orange); color: var(--orange); }
         body.dark-mode .btn-view:hover { background: var(--orange); color: white; }
         body.dark-mode .next-activity { background: #2a2a4a; color: var(--orange); }
+        /* Conversation list hover effect */
+#messagesContainer div[onclick]:hover {
+    background: #f5f5f5 !important;
+    /*transform: translateX(2px)  !important;*/
+    transition: all 0.2s;
+}
+
+body.dark-mode #messagesContainer div[onclick]:hover {
+    background: #2a2a4a !important;
+}
+
+/* Searchable recipient input */
+.recipient-search-container {
+    position: relative;
+    width: 100%;
+}
+
+.recipient-search-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.recipient-search-input:focus {
+    border-color: var(--orange);
+}
+
+.recipient-search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-gray);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.recipient-search-results.show {
+    display: block;
+}
+
+.recipient-search-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.recipient-search-item:hover {
+    background: var(--light-gray);
+}
+
+.recipient-search-item .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: white;
+}
+
+.recipient-search-item .info {
+    flex: 1;
+}
+
+.recipient-search-item .name {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.recipient-search-item .type {
+    font-size: 11px;
+    color: var(--gray);
+}
+
+body.dark-mode .recipient-search-results {
+    background: #16213e;
+    border-color: #2a2a4a;
+}
+
+body.dark-mode .recipient-search-item:hover {
+    background: #1f2a4a;
+}
+
+/* Prevent browser password manager */
+#newMessageModal input,
+#newMessageModal textarea {
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+#conversationMessages button {
+    transition: transform 0.2s;
+}
+
+#conversationMessages button:hover {
+    transform: scale(1.1);
+}
+
+.teacher-message {
+    text-align: right;
+    margin-bottom: 5px;
+}
+.teacher-message .bubble {
+    display: inline-block;
+    max-width: 70%;
+    background: #FF6B35;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 18px;
+    text-align: left;
+}
+.teacher-delete {
+    text-align: right;
+    margin-bottom: 15px;
+}
+.teacher-delete button {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    cursor: pointer;
+}
+.other-message {
+    text-align: left;
+    margin-bottom: 15px;
+}
+.other-message .bubble {
+    display: inline-block;
+    max-width: 70%;
+    background: #f0f0f0;
+    color: #333;
+    padding: 8px 12px;
+    border-radius: 18px;
+    text-align: left;
+}
     </style>
 </head>
 <body>
@@ -273,7 +425,11 @@
             <div class="logo">👩‍🏫 Kinderbot Teacher</div>
             <div class="user-info">
                 <span id="teacherName">👤 Teacher</span>
-                <button class="logout-btn" onclick="location.href='{{ route('login') }}'">Logout</button>
+                <!--<button class="logout-btn" onclick="location.href='{{ route('login') }}'">Logout</button>-->
+                <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+    @csrf
+    <button type="submit" class="logout-btn">Logout</button>
+</form>
             </div>
         </div>
         <div class="main-layout">
@@ -284,7 +440,9 @@
                         <li data-page="myclasses">📚 My Classes</li>
                         <li data-page="activities">📝 Activities</li>
                         <li data-page="reports">📊 Reports</li>
-                        <li data-page="messages">💬 Messages</li>
+                        <li data-page="messages">💬 Messages
+                            <span id="messagesUnreadBadge" style="background:#dc3545; color:white; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:5px; display:none;">0</span>
+                        </li>
                         <li data-page="settings">⚙️ Settings</li>
                     </ul>
                 </nav>
@@ -302,15 +460,12 @@
                 <div id="myclassesPage" class="page-content"><div class="section-header"><h2>My Classes</h2></div><div id="myClassesTable" class="data-table"><div class="loading">Loading...</div></div></div>
                 <div id="activitiesPage" class="page-content"><div class="section-header"><h2>All Activities</h2></div><div id="teacherActivitiesTable" class="data-table"><div class="loading">Loading...</div></div></div>
                 <div id="reportsPage" class="page-content"><div class="section-header"><h2>Student Progress Reports</h2><button class="btn-primary" id="exportReportBtn">📊 Export Report</button></div><div id="reportsContainer" class="data-table"><div class="loading">Loading...</div></div></div>
-                <div id="messagesPage" class="page-content"><div class="section-header"><h2>Messages</h2><button class="btn-primary" id="newMessageBtn">+ New Message</button></div><div id="messagesContainer" class="data-table"><div class="loading">Loading...</div></div></div>
+                <div id="messagesPage" class="page-content"><div class="section-header"><h2>Messages</h2><button class="btn-primary" id="newMessageBtn">+ New Chat</button></div><div id="messagesContainer" class="data-table"><div class="loading">Loading...</div></div></div>
                 <div id="settingsPage" class="page-content">
                     <div class="section-header"><h2>Settings</h2></div>
                     <div class="data-table">
-                        <div class="settings-item"><div><strong>🔔 Notification Preferences</strong><div style="font-size:13px;">Email notifications for new activities</div></div><div><button class="btn-small" id="toggleNotificationsBtn">Enabled ✓</button></div></div>
-                        <div class="settings-item"><div><strong>📅 Class Schedule</strong><div style="font-size:13px;">View your weekly teaching schedule</div></div><div><button class="btn-small" id="viewScheduleBtn">View Schedule</button></div></div>
-                        <div class="settings-item"><div><strong>🔑 Account Settings</strong><div style="font-size:13px;">Update password and profile</div></div><div><button class="btn-small" id="editAccountBtn">Edit Account</button></div></div>
                         <div class="settings-item"><div><strong>🌙 Dark Mode</strong><div style="font-size:13px;">Switch theme preference</div></div><div><button class="btn-small" id="darkModeBtn">Light Mode</button></div></div>
-                        <div class="settings-item"><div><strong>🌐 Language</strong><div style="font-size:13px;">Choose your preferred language</div></div><div><button class="btn-small" id="languageBtn">English</button></div></div>
+                        <div class="settings-item"><div><strong>🔑 Change password</strong><div style="font-size:13px;">Update your account password</div></div><div><button class="btn-small" id="editAccountBtn">Change</button></div></div>
                     </div>
                 </div>
             </div>
@@ -320,7 +475,77 @@
     <!-- Modals -->
     <div id="classDetailsModal" class="modal"><div class="modal-content"><h3 id="classDetailsTitle">Class Details</h3><div id="classDetailsContent"></div><div class="modal-buttons"><button class="btn-cancel" onclick="closeClassModal()">Close</button></div></div></div>
     <div id="assessmentModal" class="modal"><div class="modal-content"><h3>Quick Assessment</h3><label>Student:</label><select id="modalStudent"><option value="">Select Student</option></select><label>Activity:</label><select id="modalActivity"><option value="">Select Activity</option></select><label>Rating:</label><div class="star-rating" id="starRating"><span class="star" data-value="1">★</span><span class="star" data-value="2">★</span><span class="star" data-value="3">★</span><span class="star" data-value="4">★</span><span class="star" data-value="5">★</span></div><label>Comments:</label><textarea id="modalComments" rows="3"></textarea><div class="modal-buttons"><button class="btn-cancel" onclick="closeAssessmentModal()">Cancel</button><button class="btn-save" onclick="saveAssessment()">Save</button></div></div></div>
-    <div id="messageModal" class="modal"><div class="modal-content"><h3>Send Message</h3><label>To:</label><input type="text" id="messageTo" class="form-input" readonly><label>Subject:</label><input type="text" id="messageSubject" class="form-input"><label>Message:</label><textarea id="messageBody" rows="4" class="form-input"></textarea><div class="modal-buttons"><button class="btn-cancel" onclick="closeMessageModal()">Cancel</button><button class="btn-save" onclick="sendMessage()">Send</button></div></div></div>
+
+
+<!-- New Chat Modal -->
+<div id="newMessageModal" class="modal">
+    <div class="modal-content" style="max-width:500px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 style="margin:0;">New Chat</h3>
+            <button class="modal-close" onclick="closeNewMessageModal()" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        <div class="recipient-search-container">
+            <input type="text" id="recipientSearch" class="recipient-search-input" placeholder="Search by name..." autocomplete="off">
+            <div id="recipientSearchResults" class="recipient-search-results"></div>
+        </div>
+        <div id="messageInputSection" style="display:none; margin-top:20px;">
+            <textarea id="newMessageText" rows="3" class="form-input" placeholder="Type your message here..."></textarea>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeNewMessageModal()">Cancel</button>
+                <button class="btn-primary" onclick="sendNewTeacherMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <h3>🔑 Change Password</h3>
+        <form id="passwordChangeForm" onsubmit="return false;">
+            <div class="form-group">
+                <label>Current Password:</label>
+                <input type="password" id="currentPassword" class="form-input" placeholder="Enter current password" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label>New Password:</label>
+                <input type="password" id="newPassword" class="form-input" placeholder="Enter new password (min 6 characters)" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label>Confirm New Password:</label>
+                <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm new password" autocomplete="new-password">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn-cancel" onclick="closePasswordModal()">Cancel</button>
+                <button type="submit" class="btn-save" onclick="changePassword()">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+ <!--Conversation Modal-->
+<div id="conversationModal" class="modal">
+    <div class="modal-content" style="max-width:600px; width:35% max-height:80vh; overflow-y:auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3 id="conversationTitle">Conversation</h3>
+            <button class="modal-close" onclick="closeConversationModal()" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+        <div id="conversationMessages" style="max-height:400px; overflow-y:auto; margin-bottom:20px;">
+            <div style="text-align:center; padding:20px;">Loading messages...</div>
+        </div>
+        <div id="replySection" style="border-top:1px solid #ddd; padding-top:15px;">
+            <div class="form-group">
+                <label>Reply:</label>
+                <textarea id="replyMessage" rows="3" class="form-input" placeholder="Type your reply here..."></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeConversationModal()">Cancel</button>
+                <button class="btn-primary" onclick="sendReply()">Send Reply</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
     <script>
         // Set current date
@@ -500,27 +725,235 @@
             container.innerHTML = html;
         }
 
-        async function displayMessages() {
-            const container = document.getElementById('messagesContainer');
-            const data = await fetchAPI('/api/teacher/messages') || [];
+async function displayMessages() {
+    const messages = await fetchAPI('/api/teacher/messages');
+    const container = document.getElementById('messagesContainer');
 
-            if (data.length === 0) {
-                container.innerHTML = '<p style="text-align:center;padding:40px;">No messages yet.</p>';
-                return;
+    if (messages.length === 0) {
+        container.innerHTML = '<p style="text-align:center;padding:40px;">No messages yet.</p>';
+        return;
+    }
+
+    // Group messages by conversation partner
+    const conversations = {};
+    messages.forEach(m => {
+        const partnerId = m.direction === 'received' ? m.from_id : m.to_id;
+        const partnerName = m.direction === 'received' ? m.from : m.to;
+        const partnerType = m.direction === 'received' ? m.from_type : m.to_type;
+
+        if (!conversations[partnerId]) {
+            conversations[partnerId] = {
+                id: partnerId,
+                name: partnerName,
+                type: partnerType,
+                lastMessage: m.message,
+                lastDate: m.date,
+                lastTimestamp: new Date(m.date).getTime(),  // ← ADD for sorting
+                unreadCount: (m.direction === 'received' && !m.is_read) ? 1 : 0
+            };
+        } else {
+            if (m.direction === 'received' && !m.is_read) {
+                conversations[partnerId].unreadCount++;
             }
-
-            let html = '<table><thead><tr><th>From</th><th>Message</th><th>Date</th><th>Actions</th></tr></thead><tbody>';
-            data.forEach(m => {
-                html += `<tr>
-                    <td><strong>${m.from}</strong></td>
-                    <td>${m.message}</td>
-                    <td>${m.date}</td>
-                    <td><button class="btn-small" onclick="openMessageModal('${m.from}')">Reply</button></td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
-            container.innerHTML = html;
+            // Keep the most recent message
+            const currentTimestamp = new Date(m.date).getTime();
+            if (currentTimestamp > conversations[partnerId].lastTimestamp) {
+                conversations[partnerId].lastMessage = m.message;
+                conversations[partnerId].lastDate = m.date;
+                conversations[partnerId].lastTimestamp = currentTimestamp;
+            }
         }
+    });
+
+    // ← SORT BY LATEST MESSAGE (NEWEST FIRST)
+    const sortedConversations = Object.values(conversations).sort((a, b) => {
+        return b.lastTimestamp - a.lastTimestamp;
+    });
+
+    let html = '<div style="display:flex; flex-direction:column; gap:8px;">';
+
+    sortedConversations.forEach(conv => {
+        let icon = conv.type === 'parent' ? '👨‍👩‍👧' : (conv.type === 'coordinator' ? '📋' : '👥');
+        let unreadBadge = conv.unreadCount > 0 ? `<span style="background:#FF6B35; color:white; border-radius:12px; padding:2px 8px; font-size:11px; margin-left:8px;">${conv.unreadCount}</span>` : '';
+
+        const msgDate = new Date(conv.lastDate);
+        const today = new Date();
+        let dateDisplay = '';
+
+        if (msgDate.toDateString() === today.toDateString()) {
+            dateDisplay = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else if (msgDate.toDateString() === new Date(today.setDate(today.getDate() - 1)).toDateString()) {
+            dateDisplay = 'Yesterday';
+        } else {
+            dateDisplay = msgDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+
+        html += `
+            <div onclick="openConversation('${conv.id}', '${conv.name}', '${conv.type}')" style="display:flex; align-items:center; gap:15px; background:white; border-radius:12px; padding:12px 16px; cursor:pointer; transition:background 0.2s; border:1px solid #e0e0e0;">
+                <div style="width:50px; height:50px; background:${conv.type === 'parent' ? '#FF6B35' : '#1E3A5F'}; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; color:white;">
+                    ${icon}
+                </div>
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <strong style="font-size:16px;">${conv.name}</strong>
+                        <span style="font-size:11px; color:#888;">${dateDisplay}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                        <span style="font-size:13px; color:#666; ${conv.unreadCount > 0 ? 'font-weight:600; color:#333;' : ''}">${conv.lastMessage.substring(0, 35)}${conv.lastMessage.length > 35 ? '...' : ''}</span>
+                        ${unreadBadge}
+                    </div>
+                </div>
+                <div style="color:#ccc;">▶</div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+    await updateTotalUnreadCount();
+}
+
+let currentConversationPartnerId = null;
+let currentConversationPartnerName = null;
+
+async function openConversation(partnerId, partnerName, partnerType) {
+    currentConversationPartnerId = partnerId;
+    currentConversationPartnerName = partnerName;
+
+    document.getElementById('conversationTitle').innerHTML = `💬 Conversation with ${partnerName}`;
+    document.getElementById('conversationModal').style.display = 'flex';
+    document.getElementById('replyMessage').value = '';
+
+    // Mark messages as read
+    await fetch(`/api/teacher/mark-as-read/${partnerId}`, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+    });
+
+    await loadConversation(partnerId);
+    displayMessages(); // This will refresh the sidebar and remove notification badge
+    await updateTotalUnreadCount();
+}
+async function loadConversation(participantId) {
+    const container = document.getElementById('conversationMessages');
+    container.innerHTML = '<div style="text-align:center; padding:20px;">Loading messages...</div>';
+    const messages = await fetchAPI(`/api/teacher/conversation/${participantId}`);
+
+    if (messages.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px;">No messages yet. Start the conversation!</div>';
+        return;
+    }
+
+    let html = '';
+    let lastDate = '';
+
+    messages.forEach(msg => {
+        const isTeacher = msg.sender_type === 'teacher';
+
+        const msgDate = new Date(msg.date);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        let dateSeparator = '';
+        let dateDisplay = '';
+
+        const currentDateKey = msgDate.toDateString();
+        if (currentDateKey !== lastDate) {
+            lastDate = currentDateKey;
+            if (currentDateKey === today.toDateString()) {
+                dateSeparator = 'Today';
+            } else if (currentDateKey === yesterday.toDateString()) {
+                dateSeparator = 'Yesterday';
+            } else {
+                dateSeparator = msgDate.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+            }
+            html += `<div style="text-align:center; margin:15px 0;"><span style="background:#e0e0e0; padding:4px 12px; border-radius:12px; font-size:12px; color:#666;">${dateSeparator}</span></div>`;
+        }
+
+        dateDisplay = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        if (isTeacher) {
+            html += `<div class="teacher-message">
+                        <div class="bubble">
+                            <div style="font-size:12px; font-weight:500;">${msg.sender}</div>
+                            <div style="font-size:14px;">${msg.message}</div>
+                            <div style="font-size:10px; opacity:0.6; margin-top:4px;">${dateDisplay}</div>
+                        </div>
+                    </div>
+                    <div class="teacher-delete">
+                        <button onclick="deleteTeacherMsg(${msg.id})">x</button>
+                    </div>`;
+        } else {
+            html += `<div class="other-message">
+                        <div class="bubble">
+                            <div style="font-size:12px; font-weight:500;">${msg.sender}</div>
+                            <div style="font-size:14px;">${msg.message}</div>
+                            <div style="font-size:10px; opacity:0.6; margin-top:4px;">${dateDisplay}</div>
+                        </div>
+                    </div>`;
+        }
+    });
+
+    container.innerHTML = html;
+    container.scrollTop = container.scrollHeight;
+}
+async function deleteTeacherMsg(messageId) {
+    if (!confirm('Delete this message?')) return;
+
+    const response = await fetch(`/api/teacher/messages/${messageId}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+    });
+
+    if (response.ok) {
+        alert('✅ Message deleted');
+        if (currentConversationPartnerId) {
+            await loadConversation(currentConversationPartnerId);
+        }
+        displayMessages();
+    } else {
+        alert('❌ Error deleting message');
+    }
+}
+
+function closeConversationModal() {
+    document.getElementById('conversationModal').style.display = 'none';
+    currentConversationPartnerId = null;
+}
+
+async function sendReply() {
+    const replyText = document.getElementById('replyMessage').value;
+
+    if (!replyText) {
+        alert('Please enter a reply message');
+        return;
+    }
+
+    const response = await fetch('/api/teacher/reply-message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            receiver_id: currentConversationPartnerId,
+            subject: 'Re: Conversation',
+            message: replyText
+        })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+        alert('✅ Reply sent successfully!');
+        document.getElementById('replyMessage').value = '';
+        await loadConversation(currentConversationPartnerId);
+        displayMessages();
+    } else {
+        alert('❌ Error: ' + data.message);
+    }
+}
 
         // ==================== MODAL FUNCTIONS ====================
 
@@ -629,42 +1062,244 @@
             alert(`✅ Started "${activityName}" for ${className}\n\nActivity log has been recorded.`);
         }
 
-        function openMessageModal(to) {
-            document.getElementById('messageTo').value = to;
-            document.getElementById('messageSubject').value = '';
-            document.getElementById('messageBody').value = '';
-            document.getElementById('messageModal').style.display = 'flex';
-        }
+    let recipientsList = [];
+
+async function loadRecipients() {
+    const recipients = await fetchAPI('/api/teacher/recipients');
+    recipientsList = recipients;
+
+    const select = document.getElementById('messageTo');
+    select.innerHTML = '<option value="">-- Select Recipient --</option>';
+
+    recipients.forEach(r => {
+        let icon = r.type === 'parent' ? '👨‍👩‍👧' : (r.type === 'coordinator' ? '📋' : '👥');
+        select.innerHTML += `<option value="${r.id}" data-type="${r.type}">${icon} ${r.name} (${r.type})</option>`;
+    });
+}
+
+function openMessageModal() {
+    loadRecipients();
+    document.getElementById('messageSubject').value = '';
+    document.getElementById('messageBody').value = '';
+    document.getElementById('messageModal').style.display = 'flex';
+}
 
         function closeMessageModal() {
             document.getElementById('messageModal').style.display = 'none';
         }
 
         async function sendMessage() {
-            const to = document.getElementById('messageTo').value;
-            const subject = document.getElementById('messageSubject').value;
-            const body = document.getElementById('messageBody').value;
+    const select = document.getElementById('messageTo');
+    const receiverId = select.value;
+    const selectedOption = select.options[select.selectedIndex];
+    const receiverType = selectedOption?.getAttribute('data-type');
+    const subject = document.getElementById('messageSubject').value;
+    const message = document.getElementById('messageBody').value;
 
-            if (!body) {
-                alert('Please enter a message');
-                return;
-            }
+    if (!receiverId) {
+        alert('Please select a recipient');
+        return;
+    }
+    if (!message) {
+        alert('Please enter a message');
+        return;
+    }
 
-            const result = await postAPI('/api/teacher/send-message', {
-                to: to,
-                subject: subject,
-                message: body
-            });
+    const result = await postAPI('/api/teacher/send-message', {
+        receiver_id: receiverId,
+        receiver_type: receiverType,
+        subject: subject,
+        message: message
+    });
 
-            if (result.success) {
-                alert(`✅ Message sent to ${to}!`);
-                closeMessageModal();
-                displayMessages();
-            } else {
-                alert('❌ Error sending message');
-            }
+    if (result.success) {
+        alert('✅ Message sent successfully!');
+        closeMessageModal();
+        displayMessages();
+    } else {
+        alert('❌ Error: ' + result.message);
+    }
+}
+// ==================== NEW CHAT (WHATSAPP STYLE) ====================
+
+let selectedTeacherRecipient = null;
+let allTeacherRecipients = [];
+
+async function loadTeacherRecipients() {
+    const recipients = await fetchAPI('/api/teacher/recipients');
+    allTeacherRecipients = recipients;
+    console.log('Teacher recipients loaded:', allTeacherRecipients);
+}
+
+function openNewTeacherMessageModal() {
+    selectedTeacherRecipient = null;
+    document.getElementById('recipientSearch').value = '';
+    document.getElementById('messageInputSection').style.display = 'none';
+    document.getElementById('newMessageText').value = '';
+    document.getElementById('recipientSearchResults').innerHTML = '';
+    document.getElementById('recipientSearchResults').classList.remove('show');
+    document.getElementById('newMessageModal').style.display = 'flex';
+    document.getElementById('recipientSearch').focus();
+    // Show X button
+    const xButton = document.querySelector('#newMessageModal .modal-close');
+    if (xButton) xButton.style.display = 'flex';
+}
+
+function closeNewMessageModal() {
+    document.getElementById('newMessageModal').style.display = 'none';
+    document.getElementById('messageInputSection').style.display = 'none';
+    document.getElementById('recipientSearch').value = '';
+    document.getElementById('recipientSearchResults').innerHTML = '';
+    document.getElementById('recipientSearchResults').classList.remove('show');
+
+    // Show X button for next time
+    const xButton = document.querySelector('#newMessageModal .modal-close');
+    if (xButton) xButton.style.display = 'flex';
+}
+
+function searchTeacherRecipients() {
+    const searchTerm = document.getElementById('recipientSearch').value.toLowerCase().trim();
+    const resultsDiv = document.getElementById('recipientSearchResults');
+
+    if (searchTerm.length === 0) {
+        resultsDiv.classList.remove('show');
+        return;
+    }
+
+    if (!allTeacherRecipients || allTeacherRecipients.length === 0) {
+        resultsDiv.innerHTML = '<div style="padding:10px 15px; color:gray;">Loading users...</div>';
+        resultsDiv.classList.add('show');
+        return;
+    }
+
+    const filtered = allTeacherRecipients.filter(r =>
+        r.name.toLowerCase().includes(searchTerm)
+    );
+
+    if (filtered.length === 0) {
+        resultsDiv.innerHTML = '<div style="padding:10px 15px; color:gray;">No users found</div>';
+        resultsDiv.classList.add('show');
+        return;
+    }
+
+    let html = '';
+    filtered.forEach(r => {
+        let icon = r.type === 'parent' ? '👨‍👩‍👧' : '📋';
+        html += `
+            <div class="recipient-search-item" onclick="selectTeacherRecipient('${r.id}', '${r.name}', '${r.type}')">
+                <div class="avatar">${icon}</div>
+                <div class="info">
+                    <div class="name">${r.name}</div>
+                    <div class="type">${r.type}</div>
+                </div>
+            </div>
+        `;
+    });
+
+    resultsDiv.innerHTML = html;
+    resultsDiv.classList.add('show');
+}
+
+function selectTeacherRecipient(id, name, type) {
+    selectedTeacherRecipient = { id, name, type };
+    document.getElementById('recipientSearch').value = name;
+    document.getElementById('recipientSearchResults').classList.remove('show');
+    document.getElementById('messageInputSection').style.display = 'block';
+    document.getElementById('newMessageText').focus();
+
+    // HIDE X button (Cancel button handles closing now)
+    const xButton = document.querySelector('#newMessageModal .modal-close');
+    if (xButton) xButton.style.display = 'none';
+}
+
+async function sendNewTeacherMessage() {
+    const message = document.getElementById('newMessageText').value.trim();
+
+    if (!selectedTeacherRecipient) {
+        alert('Please select a recipient');
+        return;
+    }
+    if (!message) {
+        alert('Please enter a message');
+        return;
+    }
+
+    const response = await fetch('/api/teacher/send-message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            receiver_id: selectedTeacherRecipient.id,
+            receiver_type: selectedTeacherRecipient.type,
+            message: message,
+            subject: null
+        })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+        alert('✅ Message sent successfully!');
+        closeNewMessageModal();
+        displayMessages();
+        openConversation(selectedTeacherRecipient.id, selectedTeacherRecipient.name, selectedTeacherRecipient.type);
+    } else {
+        alert('❌ Error: ' + data.message);
+    }
+}
+
+// Update event listeners
+document.getElementById('newMessageBtn')?.addEventListener('click', openNewTeacherMessageModal);
+document.getElementById('recipientSearch')?.addEventListener('input', searchTeacherRecipients);
+
+async function deleteMessage(messageId) {
+    if (!confirm('Delete this message? It will be hidden from your view.')) return;
+
+    // Determine which API endpoint to use based on dashboard
+    let url = '';
+    if (window.location.pathname.includes('coordinator')) {
+        url = `/api/messages/${messageId}`;
+    } else if (window.location.pathname.includes('teacher')) {
+        url = `/api/teacher/messages/${messageId}`;
+    } else {
+        url = `/api/parent/messages/${messageId}`;
+    }
+
+    const response = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+        alert('✅ Message deleted');
+        // Refresh the current conversation
+        if (currentConversationPartnerId) {
+            await loadCoordinatorConversation(currentConversationPartnerId);
         }
+    } else {
+        alert('❌ Error: ' + (data.message || 'Could not delete message'));
+    }
+}
 
+async function updateTotalUnreadCount() {
+    try {
+        const response = await fetch('/api/teacher/unread-count', {
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+        });
+        const data = await response.json();
+        const badge = document.getElementById('messagesUnreadBadge');
+        if (data.count > 0) {
+            badge.innerText = data.count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error fetching unread count:', error);
+    }
+}
         // ==================== SETUP ====================
 
         document.querySelectorAll('#starRating .star').forEach(star => {
@@ -703,14 +1338,9 @@
             openAssessmentModal();
         });
         document.getElementById('exportReportBtn')?.addEventListener('click', () => alert('📊 Report export feature coming soon!'));
-        document.getElementById('newMessageBtn')?.addEventListener('click', () => openMessageModal('Coordinator'));
+        //document.getElementById('newMessageBtn')?.addEventListener('click', () => openMessageModal());
         document.getElementById('toggleNotificationsBtn')?.addEventListener('click', () => alert('🔔 Notification settings saved!'));
         document.getElementById('viewScheduleBtn')?.addEventListener('click', () => alert('📅 Schedule view coming soon!'));
-        document.getElementById('editAccountBtn')?.addEventListener('click', () => {
-            const newPass = prompt('Enter new password:');
-            if (newPass && newPass.length >= 6) alert('✅ Password updated!');
-            else if (newPass) alert('Password must be at least 6 characters');
-        });
 
         // Dark mode
         let darkMode = localStorage.getItem('teacher_theme') === 'dark';
@@ -725,18 +1355,122 @@
             applyDarkMode();
         });
 
-        // Language
-        let langIdx = 0, langs = ['English', 'العربية', 'Français'];
-        document.getElementById('languageBtn')?.addEventListener('click', () => {
-            langIdx = (langIdx + 1) % langs.length;
-            document.getElementById('languageBtn').innerHTML = langs[langIdx];
-            alert(`Language set to ${langs[langIdx]}`);
+
+    // ==================== PASSWORD CHANGE FUNCTIONS ====================
+
+    function openPasswordModal() {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('passwordModal').style.display = 'flex';
+        }
+
+    function closePasswordModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+        }
+
+    async function changePassword() {
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    // Validation
+    if (!currentPassword) {
+        alert('Please enter your current password');
+        return;
+    }
+    if (!newPassword) {
+        alert('Please enter a new password');
+        return;
+    }
+    if (newPassword.length < 6) {
+        alert('New password must be at least 6 characters');
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        alert('New passwords do not match');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/teacher/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword,
+                confirm_password: confirmPassword
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert('✅ ' + data.message);
+            closePasswordModal();
+
+            // Clear the form for next time
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+
+            // OPTIONAL: Ask browser to save the NEW password
+            // This creates a temporary login form to trigger browser save
+            triggerBrowserSavePassword(newPassword);
+        } else {
+            alert('❌ ' + data.message);
+            // Clear only the password fields, keep current password for retry
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+    } catch (error) {
+        alert('❌ Error changing password. Please try again.');
+    }
+}
+
+// OPTIONAL: Function to trigger browser password save (only on success)
+function triggerBrowserSavePassword(newPassword) {
+    // Create a hidden temporary form to trigger browser's password save
+    const tempForm = document.createElement('form');
+    tempForm.method = 'POST';
+    tempForm.action = '/dummy-login';
+    tempForm.style.display = 'none';
+
+    const usernameInput = document.createElement('input');
+    usernameInput.type = 'text';
+    usernameInput.name = 'email';
+    usernameInput.value = teacherName;
+
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'password';
+    passwordInput.name = 'password';
+    passwordInput.value = newPassword;
+
+    tempForm.appendChild(usernameInput);
+    tempForm.appendChild(passwordInput);
+    document.body.appendChild(tempForm);
+
+    // Submit the form (won't actually go anywhere)
+    tempForm.submit();
+
+    // Clean up
+    setTimeout(() => tempForm.remove(), 1000);
+}
+
+        // Then update the Edit Account button
+        document.getElementById('editAccountBtn')?.addEventListener('click', () => {
+            openPasswordModal();
         });
 
         // Initial load
         loadClasses();
         loadTodayActivities();
         loadAssessments();
+        loadTeacherRecipients();
+        updateTotalUnreadCount();
     </script>
 </body>
 </html>

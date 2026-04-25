@@ -13,7 +13,6 @@ class ClassController extends Controller
             DB::table('classes')->insert([
                 'name' => $request->name,
                 'grade_level' => $request->grade_level,
-                'age_range' => $request->age_range,
                 'program_id' => 1,
                 'is_active' => true,
                 'created_at' => now(),
@@ -45,7 +44,6 @@ class ClassController extends Controller
             DB::table('classes')->where('id', $id)->update([
                 'name' => $request->name,
                 'grade_level' => $request->grade_level,
-                'age_range' => $request->age_range,
                 'updated_at' => now(),
             ]);
             return response()->json(['success' => true]);

@@ -8,17 +8,15 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ParentController;
 
+
+Route::middleware(['web'])->group(function () {
 // Login routes
 Route::get('/', function () {
     return view('login');
 })->name('login');
 
 Route::post('/login', [LoginController::class, 'authenticate'])->name('login.post');
-
-Route::get('/logout', function () {
-    session()->flush();
-    return redirect()->route('login');
-})->name('logout');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Dashboard routes
 Route::get('/coordinator', [CoordinatorController::class, 'dashboard'])->name('coordinator');
@@ -117,12 +115,53 @@ Route::get('/api/parent/child/{childId}/notes', [ParentController::class, 'getCh
 Route::get('/api/parent/messages', [ParentController::class, 'getMessages']);
 Route::post('/api/parent/send-message', [ParentController::class, 'sendMessage']);
 
-/*
-Route::get('/teacher', function () {
-    return view('teacher');
-})->name('teacher');
+// Teacher and Parent password change
+Route::post('/api/teacher/change-password', [TeacherController::class, 'changePassword']);
+Route::post('/api/parent/change-password', [ParentController::class, 'changePassword']);
+// Teacher message routes
+Route::get('/api/teacher/messages', [TeacherController::class, 'getMessages']);
+Route::get('/api/teacher/recipients', [TeacherController::class, 'getRecipients']);
+Route::post('/api/teacher/send-message', [TeacherController::class, 'sendMessage']);
 
-Route::get('/parent', function () {
-    return view('parent');
-})->name('parent');
-*/
+// Parent message routes
+Route::get('/api/parent/messages', [ParentController::class, 'getMessages']);
+Route::get('/api/parent/recipients', [ParentController::class, 'getRecipients']);
+Route::post('/api/parent/send-message', [ParentController::class, 'sendMessage']);
+
+// Mark message as read
+//Route::post('/api/teacher/mark-as-read/{id}', [TeacherController::class, 'markAsRead']);
+//Route::post('/api/parent/mark-as-read/{id}', [ParentController::class, 'markAsRead']);
+
+// Coordinator message routes
+Route::get('/api/coordinator/messages', [CoordinatorController::class, 'getCoordinatorMessages']);
+Route::get('/api/coordinator/recipients', [CoordinatorController::class, 'getCoordinatorRecipients']);
+Route::get('/api/coordinator/conversation/{participantId}', [CoordinatorController::class, 'getCoordinatorConversation']);
+
+// Parent conversation routes
+Route::get('/api/parent/conversation/{participantId}', [ParentController::class, 'getConversation']);
+Route::post('/api/parent/reply-message', [ParentController::class, 'replyToMessage']);
+
+// Teacher conversation routes
+Route::get('/api/teacher/conversation/{participantId}', [TeacherController::class, 'getConversation']);
+Route::post('/api/teacher/reply-message', [TeacherController::class, 'replyToMessage']);
+
+// Coordinator conversation routes
+Route::post('/api/coordinator/send-message', [CoordinatorController::class, 'sendCoordinatorMessage']);
+Route::post('/api/coordinator/reply-message', [CoordinatorController::class, 'replyToCoordinatorMessage']);
+
+
+// Delete message (soft delete)
+Route::delete('/api/messages/{id}', [CoordinatorController::class, 'deleteMessage']);
+Route::delete('/api/teacher/messages/{id}', [TeacherController::class, 'deleteMessage']);
+Route::delete('/api/parent/messages/{id}', [ParentController::class, 'deleteMessage']);
+
+
+Route::post('/api/coordinator/mark-as-read/{senderId}', [CoordinatorController::class, 'markMessagesAsRead']);
+Route::post('/api/parent/mark-as-read/{senderId}', [ParentController::class, 'markMessagesAsRead']);
+Route::post('/api/teacher/mark-as-read/{senderId}', [TeacherController::class, 'markMessagesAsRead']);
+
+Route::get('/api/unread-count', [CoordinatorController::class, 'getUnreadCount']);
+Route::get('/api/teacher/unread-count', [TeacherController::class, 'getUnreadCount']);
+Route::get('/api/parent/unread-count', [ParentController::class, 'getUnreadCount']);
+
+});
