@@ -14,8 +14,8 @@ return new class extends Migration
             $table->string('full_name');
             $table->string('email');
             $table->string('phone')->nullable();
-            $table->string('qualification')->nullable();
-            $table->date('hire_date')->nullable();
+            $table->string('qualification')->nullable(); //null
+            $table->date('hire_date')->nullable(); //null
             $table->timestamps();
         });
     }

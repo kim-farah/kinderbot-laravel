@@ -96,7 +96,7 @@
         <h1>🤖 Kinderbot</h1>
         <h2>Welcome back!</h2>
 
-        <form method="POST" action="{{ route('login.post') }}">
+        <!--<form method="POST" action="{{ route('login.post') }}">
             @csrf
             <div class="form-group">
                 <label>Email</label>
@@ -115,7 +115,25 @@
                     {{ $errors->first() }}
                 </div>
             @endif
-        </form>
+        </form>-->
+
+    <form method="POST" action="{{ route('login.post') }}">
+    @csrf
+    <div class="form-group">
+        <label>Email:</label>
+        <input type="email" name="email" class="form-input" autocomplete="username" required>
+    </div>
+    <div class="form-group">
+        <label>Password:</label>
+        <input type="password" name="password" class="form-input" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="login-btn">Login</button>
+    @if($errors->any())
+                <div class="error-message">
+                    {{ $errors->first() }}
+                </div>
+    @endif
+</form>
     </div>
 </body>
 </html>

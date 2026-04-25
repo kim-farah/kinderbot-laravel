@@ -322,17 +322,19 @@
 
         <div class="main-layout">
             <div class="sidebar">
-                <nav>
-                    <ul>
-                        <li onclick="window.location.href='{{ route('coordinator') }}'">📊 Dashboard</li>
-                        <li onclick="window.location.href='{{ route('coordinator') }}'">📚 Classes</li>
-                        <li>👥 Teachers</li>
-                        <li>👨‍👩‍👧 Parents</li>
-                        <li class="active" onclick="window.location.href='{{ route('coordinator') }}'">📝 Activities</li>
-                        <li>⚙️ Settings</li>
-                    </ul>
-                </nav>
-            </div>
+    <nav>
+        <ul>
+            <li data-page="dashboard" onclick="window.location.href='{{ route('coordinator') }}'">📊 Dashboard</li>
+            <li data-page="classes" onclick="window.location.href='{{ route('coordinator') }}'">📚 Classes</li>
+            <li data-page="teachers" onclick="window.location.href='{{ route('coordinator') }}'">👥 Teachers</li>
+            <li data-page="parents" onclick="window.location.href='{{ route('coordinator') }}'">👨‍👩‍👧 Parents</li>
+            <li data-page="students" onclick="window.location.href='{{ route('coordinator') }}'">👧 Students</li>
+            <li data-page="activities" class="active" onclick="window.location.href='{{ route('coordinator') }}'">📝 Activities</li>
+            <li data-page="messages" onclick="window.location.href='{{ route('coordinator') }}'">💬 Messages</li>
+            <li data-page="settings" onclick="window.location.href='{{ route('coordinator') }}'">⚙️ Settings</li>
+        </ul>
+    </nav>
+</div>
 
             <div class="content">
                 <div class="form-container">

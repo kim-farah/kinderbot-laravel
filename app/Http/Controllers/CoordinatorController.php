@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Auth;
 class CoordinatorController extends Controller
 {
     public function dashboard()
@@ -23,7 +23,8 @@ class CoordinatorController extends Controller
         ]);
     }
 
-    /**
+    // ==================== HELPER METHODS ====================
+/**
  * Generate a random secure password
  */
 private function generateRandomPassword($length = 10)
@@ -32,60 +33,69 @@ private function generateRandomPassword($length = 10)
     return substr(str_shuffle($chars), 0, $length);
 }
 
-    // ==================== HELPER METHODS ====================
+private function calculateCurrentAge($dateOfBirth)
+{
+    if (!$dateOfBirth) return null;
+    $dob = new \DateTime($dateOfBirth);
+    $currentYear = (int)date('Y');
 
-    /**
-     * Calculate current age based on date of birth.
-     */
-    private function calculateCurrentAge($dateOfBirth)
-    {
-        if (!$dateOfBirth) return null;
-        $dob = new \DateTime($dateOfBirth);
-        $now = new \DateTime();
-        return $now->diff($dob)->y;
+    // Use December 31st of current year as cutoff
+    $cutoffDate = new \DateTime("$currentYear-12-31");
+
+    // Calculate age on December 31st
+    $age = $cutoffDate->diff($dob)->y;
+
+    return $age;
+}
+
+private function getSuggestedClassByAge($age)
+{
+    // Age to grade level mapping (December 31 cutoff)
+    // Age 3 → KG1 (grade_level 0)
+    // Age 4 → KG2 (grade_level 1)
+    // Age 5 → KG3 (grade_level 2)
+    // Age 6 → Grade 1 (grade_level 3)
+    // Age 7 → Grade 2 (grade_level 4)
+
+    $gradeLevel = $age - 3; // Age 3 = grade 0, Age 4 = grade 1, etc.
+
+    if ($gradeLevel < 0) {
+        $gradeLevel = 0;
     }
 
-    /**
-     * Get the suggested class for a student based on their current age.
-     * It uses the `age_range` defined in the classes table (e.g., "Ages 3-4").
-     */
-    private function getSuggestedClassByAge($age)
-    {
-        $classes = DB::table('classes')->get();
-        foreach ($classes as $class) {
-            if ($class->age_range && preg_match('/(\d+)-(\d+)/', $class->age_range, $matches)) {
-                $minAge = (int)$matches[1];
-                $maxAge = (int)$matches[2];
-                if ($age >= $minAge && $age <= $maxAge) {
-                    return $class;
-                }
-            }
-        }
-        return null;
-    }
+    return DB::table('classes')->where('grade_level', $gradeLevel)->first();
+}
 
     // ==================== STUDENT METHODS ====================
 
-    /**
-     * Get all students for the Students page.
-     */
-    public function getStudents()
-    {
-        $students = DB::table('students')
-            ->leftJoin('parent_student', 'students.id', '=', 'parent_student.student_id')
-            ->leftJoin('parents', 'parent_student.parent_id', '=', 'parents.id')
-            ->select('students.*', 'parents.full_name as parent_name')
-            ->get();
 
-        foreach ($students as $student) {
-            $student->current_age = $this->calculateCurrentAge($student->date_of_birth);
-            $suggestedClass = $this->getSuggestedClassByAge($student->current_age);
-            $student->suggested_class_name = $suggestedClass ? $suggestedClass->name : 'Not applicable';
-            $student->suggested_age_range = $suggestedClass ? $suggestedClass->age_range : '';
-            $student->is_enrolled = DB::table('enrollments')->where('student_id', $student->id)->exists();
-        }
-        return response()->json($students);
+public function getStudents()
+{
+    $students = DB::table('students')
+        ->leftJoin('parent_student', 'students.id', '=', 'parent_student.student_id')
+        ->leftJoin('parents', 'parent_student.parent_id', '=', 'parents.id')
+        ->select('students.*', 'parents.full_name as parent_name')
+        ->get();
+
+    foreach ($students as $student) {
+        // Calculate age on Dec 31 for class suggestion only
+        $age = $this->calculateAgeOnDec31($student->date_of_birth);
+        $suggestedClass = $this->getSuggestedClassByAge($age);
+        $student->suggested_class_name = $suggestedClass ? $suggestedClass->name : 'Not applicable';
+        $student->is_enrolled = DB::table('enrollments')->where('student_id', $student->id)->exists();
+        // Do NOT add current_age to output
     }
+    return response()->json($students);
+}
+
+private function calculateAgeOnDec31($dateOfBirth)
+{
+    if (!$dateOfBirth) return null;
+    $dob = new \DateTime($dateOfBirth);
+    $currentYear = (int)date('Y');
+    $cutoffDate = new \DateTime("$currentYear-12-31");
+    return $cutoffDate->diff($dob)->y;
+}
 
     /**
      * Get a single student for editing.
@@ -178,38 +188,36 @@ private function generateRandomPassword($length = 10)
         }
     }
 
-    /**
-     * Get students who are available to be added to a specific section.
-     * Rules:
-     * 1. Student's age must match the class's age_range.
-     * 2. Student must NOT be enrolled in ANY class.
-     */
+
     public function getAvailableStudentsForSection($sectionId)
-    {
-        $section = DB::table('sections')->where('id', $sectionId)->first();
-        if (!$section) {
-            return response()->json([]);
-        }
-
-        $class = DB::table('classes')->where('id', $section->class_id)->first();
-        $minAge = $maxAge = null;
-        if ($class->age_range && preg_match('/(\d+)-(\d+)/', $class->age_range, $matches)) {
-            $minAge = (int)$matches[1];
-            $maxAge = (int)$matches[2];
-        }
-
-        $availableStudents = [];
-        $allStudents = DB::table('students')->get();
-        foreach ($allStudents as $student) {
-            $age = $this->calculateCurrentAge($student->date_of_birth);
-            $isEnrolled = DB::table('enrollments')->where('student_id', $student->id)->exists();
-            if (!$isEnrolled && $age >= $minAge && $age <= $maxAge) {
-                $student->current_age = $age;
-                $availableStudents[] = $student;
-            }
-        }
-        return response()->json($availableStudents);
+{
+    $section = DB::table('sections')->where('id', $sectionId)->first();
+    if (!$section) {
+        return response()->json([]);
     }
+
+    $class = DB::table('classes')->where('id', $section->class_id)->first();
+    $requiredGradeLevel = $class->grade_level;
+
+    // Calculate required age from grade level
+    $requiredAge = $requiredGradeLevel + 3; // Grade 0 = age 3, Grade 1 = age 4, etc.
+
+    $availableStudents = [];
+    $allStudents = DB::table('students')->get();
+
+    foreach ($allStudents as $student) {
+        $age = $this->calculateCurrentAge($student->date_of_birth);
+        $isEnrolled = DB::table('enrollments')->where('student_id', $student->id)->exists();
+
+        // Student is eligible if age matches the required age for this grade
+        if (!$isEnrolled && $age == $requiredAge) {
+            //$student->current_age = $age;
+            $availableStudents[] = $student;
+        }
+    }
+
+    return response()->json($availableStudents);
+}
 
     /**
      * Add a student to a section (enroll them).
@@ -354,29 +362,38 @@ private function generateRandomPassword($length = 10)
     }
 
     public function storeTeacher(Request $request)
-    {
-        try {
-            $userId = DB::table('users')->insertGetId([
-                'email' => $request->email ?: strtolower(str_replace(' ', '.', $request->full_name)) . '@teacher.kinderbot.com',
-                'password' => bcrypt('password123'),
-                'role_id' => 2,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            DB::table('teachers')->insert([
-                'user_id' => $userId,
-                'full_name' => $request->full_name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()]);
-        }
+{
+    try {
+        $plainPassword = $this->generateRandomPassword();
+
+        $userId = DB::table('users')->insertGetId([
+            'email' => $request->email ?: strtolower(str_replace(' ', '.', $request->full_name)) . '@teacher.kinderbot.com',
+            'password' => bcrypt($plainPassword),
+            'role_id' => 2,  // Teacher role
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('teachers')->insert([
+            'user_id' => $userId,
+            'full_name' => $request->full_name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Return the password so coordinator can see it
+        return response()->json([
+            'success' => true,
+            'password' => $plainPassword,
+            'email' => $request->email ?: strtolower(str_replace(' ', '.', $request->full_name)) . '@teacher.kinderbot.com'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
     }
+}
 
     public function getTeachersList()
     {
@@ -422,32 +439,41 @@ private function generateRandomPassword($length = 10)
     }
 
     public function storeParent(Request $request)
-    {
-        try {
-            if (!$request->email) {
-                return response()->json(['success' => false, 'message' => 'Email is required']);
-            }
-            $userId = DB::table('users')->insertGetId([
-                'email' => $request->email,
-                'password' => bcrypt('password123'),
-                'role_id' => 3,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            DB::table('parents')->insert([
-                'user_id' => $userId,
-                'full_name' => $request->full_name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+{
+    try {
+        if (!$request->email) {
+            return response()->json(['success' => false, 'message' => 'Email is required']);
         }
+
+        $plainPassword = $this->generateRandomPassword();
+
+        $userId = DB::table('users')->insertGetId([
+            'email' => $request->email,
+            'password' => bcrypt($plainPassword),
+            'role_id' => 3,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('parents')->insert([
+            'user_id' => $userId,
+            'full_name' => $request->full_name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'password' => $plainPassword,
+            'email' => $request->email
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
     }
+}
 
     public function storeParentWithChild(Request $request)
     {
@@ -617,4 +643,306 @@ public function getSection($id)
     }
 }
 
+public function getTeacherActivityLog()
+{
+    $logs = DB::table('teacher_activity_log')
+        ->orderBy('timestamp', 'desc')
+        ->take(10)
+        ->get();
+
+    return response()->json($logs);
+}
+
+// ==================== COORDINATOR MESSAGING METHODS ====================
+
+// API: Get all messages for coordinator (grouped by conversation)
+public function getCoordinatorMessages()
+{
+    $userId = Auth::id();
+
+    // Get messages sent to coordinator
+    $received = DB::table('messages')
+        ->where('receiver_id', $userId)
+        ->where('receiver_type', 'coordinator')
+        ->whereNull('deleted_at')  // ← ADD THIS LINE
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    // Get messages sent by coordinator
+    $sent = DB::table('messages')
+        ->where('sender_id', $userId)
+        ->where('sender_type', 'coordinator')
+        ->whereNull('deleted_at')  // ← ADD THIS LINE
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    $messages = [];
+
+    foreach ($received as $msg) {
+        $sender = $this->getMessageUserInfo($msg->sender_id, $msg->sender_type);
+        $messages[] = [
+            'id' => $msg->id,
+            'from' => $sender['name'],
+            'from_id' => $msg->sender_id,
+            'from_type' => $msg->sender_type,
+            'subject' => $msg->subject,
+            'message' => $msg->message,
+            'date' => date('M d, Y H:i', strtotime($msg->created_at)),
+            'is_read' => $msg->is_read,
+            'direction' => 'received'
+        ];
+    }
+
+    foreach ($sent as $msg) {
+        $receiver = $this->getMessageUserInfo($msg->receiver_id, $msg->receiver_type);
+        $messages[] = [
+            'id' => $msg->id,
+            'to' => $receiver['name'],
+            'to_id' => $msg->receiver_id,
+            'to_type' => $msg->receiver_type,
+            'subject' => $msg->subject,
+            'message' => $msg->message,
+            'date' => date('M d, Y H:i', strtotime($msg->created_at)),
+            'direction' => 'sent'
+        ];
+    }
+
+    usort($messages, function($a, $b) {
+        return strtotime($b['date']) - strtotime($a['date']);
+    });
+
+    return response()->json($messages);
+}
+
+// API: Get recipients for coordinator (all teachers and parents)
+public function getCoordinatorRecipients()
+{
+    $recipients = [];
+
+    // Get all teachers
+    $teachers = DB::table('teachers')->get();
+    foreach ($teachers as $teacher) {
+        $user = DB::table('users')->where('id', $teacher->user_id)->first();
+        if ($user) {
+            $recipients[] = [
+                'id' => $user->id,
+                'name' => $teacher->full_name,
+                'type' => 'teacher'
+            ];
+        }
+    }
+
+    // Get all parents
+    $parents = DB::table('parents')->get();
+    foreach ($parents as $parent) {
+        $user = DB::table('users')->where('id', $parent->user_id)->first();
+        if ($user) {
+            $recipients[] = [
+                'id' => $user->id,
+                'name' => $parent->full_name,
+                'type' => 'parent'
+            ];
+        }
+    }
+
+    return response()->json($recipients);
+}
+
+// API: Get full conversation between coordinator and a specific participant
+public function getCoordinatorConversation($participantId)
+{
+    $userId = Auth::id();
+
+    // Get participant type
+    $participant = DB::table('users')->where('id', $participantId)->first();
+    $participantType = $participant->role_id == 2 ? 'teacher' : 'parent';
+
+    // Get all messages between coordinator and participant
+    $messages = DB::table('messages')
+        ->where(function($query) use ($userId, $participantId, $participantType) {
+            $query->where(function($q) use ($userId, $participantId, $participantType) {
+                $q->where('sender_id', $userId)
+                  ->where('sender_type', 'coordinator')
+                  ->where('receiver_id', $participantId)
+                  ->where('receiver_type', $participantType);
+            })->orWhere(function($q) use ($userId, $participantId, $participantType) {
+                $q->where('sender_id', $participantId)
+                  ->where('sender_type', $participantType)
+                  ->where('receiver_id', $userId)
+                  ->where('receiver_type', 'coordinator');
+            });
+        })
+        ->whereNull('deleted_at')
+        ->orderBy('created_at', 'asc')
+        ->get();
+
+    $conversation = [];
+    foreach ($messages as $msg) {
+        if ($msg->sender_type == 'coordinator') {
+            $sender = 'Coordinator';
+            $sender_type = 'coordinator';
+        } elseif ($msg->sender_type == 'teacher') {
+            $teacher = DB::table('teachers')->where('user_id', $msg->sender_id)->first();
+            $sender = $teacher ? $teacher->full_name : 'Teacher';
+            $sender_type = 'teacher';
+        } else {
+            $parent = DB::table('parents')->where('user_id', $msg->sender_id)->first();
+            $sender = $parent ? $parent->full_name : 'Parent';
+            $sender_type = 'parent';
+        }
+
+        $conversation[] = [
+            'id' => $msg->id,
+            'sender_id' => (int)$msg->sender_id,  // ← ADDED: Cast to integer
+            'sender' => $sender,
+            'sender_type' => $sender_type,
+            'message' => $msg->message,
+            'date' => date('M d, Y H:i', strtotime($msg->created_at)),
+            'is_read' => $msg->is_read
+        ];
+
+        // Mark as read if coordinator is receiver
+        if ($msg->receiver_id == $userId && !$msg->is_read) {
+            DB::table('messages')->where('id', $msg->id)->update(['is_read' => true]);
+        }
+    }
+
+    return response()->json($conversation);
+}
+
+public function sendCoordinatorMessage(Request $request)
+{
+    try {
+        $userId = Auth::id();
+
+        DB::table('messages')->insert([
+            'sender_id' => $userId,
+            'sender_type' => 'coordinator',
+            'receiver_id' => $request->receiver_id,
+            'receiver_type' => $request->receiver_type,
+            'subject' => $request->subject ?? null,
+            'message' => $request->message,
+            'is_read' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['success' => true]);
+
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+
+// API: Reply to a message from coordinator
+public function replyToCoordinatorMessage(Request $request)
+{
+    try {
+        $userId = Auth::id();
+
+        DB::table('messages')->insert([
+            'sender_id' => $userId,
+            'sender_type' => 'coordinator',
+            'receiver_id' => $request->receiver_id,
+            'receiver_type' => $request->receiver_type,
+            'subject' => $request->subject,
+            'message' => $request->message,
+            'is_read' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Reply sent successfully!']);
+
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+}
+
+// Helper for message user info
+private function getMessageUserInfo($userId, $type)
+{
+    $user = DB::table('users')->where('id', $userId)->first();
+    $name = $user->email;
+
+    if ($type == 'teacher') {
+        $teacher = DB::table('teachers')->where('user_id', $userId)->first();
+        $name = $teacher ? $teacher->full_name : $user->email;
+    } elseif ($type == 'parent') {
+        $parent = DB::table('parents')->where('user_id', $userId)->first();
+        $name = $parent ? $parent->full_name : $user->email;
+    } elseif ($type == 'coordinator') {
+        $name = 'Coordinator';
+    }
+
+    return ['id' => $userId, 'name' => $name, 'type' => $type];
+}
+
+
+// Soft delete message
+public function deleteMessage($id)
+{
+    try {
+        $userId = Auth::id();
+        $message = DB::table('messages')->where('id', $id)->first();
+
+        if (!$message) {
+            return response()->json(['success' => false, 'message' => 'Message not found']);
+        }
+
+        // Only allow deleting own messages
+        if ($message->sender_id != $userId) {
+            return response()->json(['success' => false, 'message' => 'Cannot delete others messages']);
+        }
+
+        // Check if already deleted
+        if ($message->deleted_at) {
+            return response()->json(['success'=> false, 'message' => 'Message already deleted']);
+        }
+
+        DB::table('messages')->where('id', $id)->update([
+            'deleted_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Message deleted successfully']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'Delete failed']);
+    }
+}
+
+public function markMessagesAsRead($senderId)
+{
+    $userId = Auth::id();
+
+    DB::table('messages')
+        ->where('sender_id', $senderId)
+        ->where('receiver_id', $userId)
+        ->where('is_read', false)
+        ->update(['is_read' => true]);
+
+    return response()->json(['success' => true]);
+}
+
+public function getUnreadCount()
+{
+    $userId = Auth::id();
+
+    $count = DB::table('messages')
+        ->where('receiver_id', $userId)
+        ->where('receiver_type', $this->getUserType())
+        ->where('is_read', false)
+        ->whereNull('deleted_at')
+        ->count();
+
+    return response()->json(['count' => $count]);
+}
+private function getUserType()
+{
+    // Determine based on controller
+    if ($this instanceof CoordinatorController) return 'coordinator';
+    if ($this instanceof TeacherController) return 'teacher';
+    return 'parent';
+}
 }

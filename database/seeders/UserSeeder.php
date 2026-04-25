@@ -17,21 +17,7 @@ class UserSeeder extends Seeder
                 'role_id' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
-            [
-                'email' => 'teacher@test.com',
-                'password' => Hash::make('password123'),
-                'role_id' => 2,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'email' => 'parent@test.com',
-                'password' => Hash::make('password123'),
-                'role_id' => 3,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            ]
         ]);
     }
 }

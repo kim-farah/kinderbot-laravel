@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
 {
@@ -15,26 +14,28 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        // Get user with role
-        $user = DB::table('users')
-            ->join('roles', 'users.role_id', '=', 'roles.id')
-            ->where('users.email', $request->email)
-            ->first();
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
 
-        if ($user && password_verify($request->password, $user->password)) {
-            // Store user in session
-            session(['user_id' => $user->id, 'user_role' => $user->name]);
+            $user = Auth::user();
 
-            // Redirect based on role
-            if ($user->name == 'coordinator') {
+            if ($user->role_id == 1) {
                 return redirect()->route('coordinator');
-            } elseif ($user->name == 'teacher') {
+            } elseif ($user->role_id == 2) {
                 return redirect()->route('teacher');
-            } elseif ($user->name == 'parent') {
+            } elseif ($user->role_id == 3) {
                 return redirect()->route('parent');
             }
         }
 
-        return back()->withErrors(['email' => 'Invalid email or password']);
+        return back()->withErrors(['email' => 'Invalid credentials']);
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect('/');
     }
 }

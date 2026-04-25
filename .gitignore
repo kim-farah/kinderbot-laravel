@@ -22,3 +22,9 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/bootstrap/cache/
+/storage/framework/
+/storage/logs/*.log
+composer.lock
+package-lock.json
+/.gitignore
