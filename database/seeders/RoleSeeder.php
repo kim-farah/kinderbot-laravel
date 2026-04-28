@@ -13,6 +13,8 @@ class RoleSeeder extends Seeder
             ['id' => 1, 'name' => 'coordinator'],
             ['id' => 2, 'name' => 'teacher'],
             ['id' => 3, 'name' => 'parent'],
+            ['id' => 4, 'name' => 'student'],
         ]);
     }
-}
+
+    }

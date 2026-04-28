@@ -169,6 +169,15 @@ Route::get('/api/parent/unread-count', [ParentController::class, 'getUnreadCount
 Route::get('/activities/{id}', [ActivityController::class, 'show'])
     ->name('activities.show');
 
+
+    Route::get('/api/classes/{classId}/activities', [ActivityController::class, 'byClass']);
+
 Route::get('/activities/{activity}/sections/{section}/assessment',
  [AssessmentController::class,'show'])
  ->name('activities.assessment');
+
+ Route::get('/activities/{id}/assessment', [AssessmentController::class,'index']);
+
+ Route::get('/api/activities/{id}/assessment', [AssessmentController::class,'getData']);
+
+ Route::post('/api/assessment/submit', [AssessmentController::class,'submit']);

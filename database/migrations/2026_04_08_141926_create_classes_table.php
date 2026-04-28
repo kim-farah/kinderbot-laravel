@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('program_id')->constrained()->cascadeOnDelete();
             $table->string('name'); // KG1, KG2, Grade 1
             $table->string('grade_level')->nullable();
-            $table->string('age_range')->nullable(); // new
+            //$table->string('age_range')->nullable(); // new
             $table->integer('order_index')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

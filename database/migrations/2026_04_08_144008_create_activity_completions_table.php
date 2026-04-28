@@ -15,7 +15,7 @@ return new class extends Migration
         $table->id();
         $table->foreignId('student_id')->constrained()->cascadeOnDelete();
         $table->foreignId('activity_id')->constrained()->cascadeOnDelete();
-        $table->foreignId('activity_completion_status_id')->constrained->nullable();
+        $table->foreignId('activity_completion_status_id')->constrained()->nullable();
         $table->timestamp('completion_date')->nullable();
     });
     }

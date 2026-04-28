@@ -13,6 +13,10 @@ class Activity extends Model
     'materials',
     'overview',
     'skill_competencies',
+    'rodinComment',
+    'activityComment',
+    'feedbackComment',
+    'is_published',
     ];
 
     public function class() {
@@ -38,10 +42,14 @@ class Activity extends Model
 
     public function competencies()
     {
-    return $this->belongsToMany(
-    Competency::class,
-    'activity_competency'
+        return $this->belongsToMany(
+        Competency::class,
+        'activity_competency'
     );
     }
 
+    public function animations()
+    {
+    return $this->hasMany(ActivityAnimation::class);
+    }
     }

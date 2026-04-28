@@ -55,9 +55,15 @@ class ActivityController extends Controller
 
     public function show($id)
     {
-        $activity = Activity::with(['resources', 'steps'])
-                ->findOrFail($id);
+        return Activity::with([
+            'resources',
+            'steps',
+            'animations'
+        ])->findOrFail($id);
+    }
 
-        return view('activities.show', compact('activity'));
+    public function byClass($classId)
+    {
+        return Activity::where('class_id', $classId)->get();
     }
 }

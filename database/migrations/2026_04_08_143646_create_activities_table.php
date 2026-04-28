@@ -14,10 +14,14 @@ return new class extends Migration
             $table->string('title');
             $table->text('objective')->nullable();
             $table->text('materials')->nullable();  // Changed from materials
+            $table->text('description')->nullable();
+            $table->text('activityComment')->nullable();
+            $table->text('rodinComment')->nullable();
+            $table->text('feedbackComment')->nullable();
             //$table->text('instructions')->nullable();
             //$table->integer('estimated_duration')->nullable();
             //$table->string('difficulty_level')->nullable();  // Added
-            //$table->boolean('is_published')->default(false);  // Added
+            $table->boolean('is_published')->default(true);  // Added
             //$table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();  // Added
             $table->text('overview');
             $table->text('skills_competencies');

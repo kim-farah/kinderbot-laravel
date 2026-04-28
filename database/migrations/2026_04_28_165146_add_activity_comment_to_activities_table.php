@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('activity_templates', function (Blueprint $table) {
-        $table->id();
-        $table->string('name');
-        $table->json('structure_json')->nullable();
-        $table->boolean('is_active')->default(true);
-        $table->timestamps();
+        Schema::table('activities', function (Blueprint $table) {
+            $table->text('activityComment')->nullable();
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('activity_templates');
+        Schema::table('activities', function (Blueprint $table) {
+            $table->dropColumn('activityComment');
+        });
     }
 };
