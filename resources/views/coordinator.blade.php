@@ -2079,8 +2079,6 @@ async function updateTotalUnreadCount() {
 
     // ==================== SETTINGS BUTTONS ====================
     document.getElementById('schoolYearBtn')?.addEventListener('click', () => { const ny = prompt('School year (YYYY-YYYY):', '2024-2025'); if (ny) document.getElementById('schoolYearBtn').innerText = ny; });
-    document.getElementById('exportBtn')?.addEventListener('click', () => { const data = { classes: classesData, activities: activitiesData, teacherLog: teacherLogData, exportDate: new Date().toISOString() }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kinderbot_export.json'; a.click(); alert('Data exported!'); });
-
     const savedTheme = localStorage.getItem('coordinator_theme');
     if (savedTheme === 'dark') { document.body.classList.add('dark-mode'); document.getElementById('themeBtn').innerHTML = 'Dark Mode 🌙'; }
 
