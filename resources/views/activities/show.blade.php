@@ -206,7 +206,7 @@ body {
 <img id="rodinImage" class="hero-img">
 
 <div class="overlay-text">
-<p id="rodinComment"></p>
+<p id="rodin_comment"></p>
 </div>
 
 </div>
@@ -220,7 +220,7 @@ body {
 
 <img id="stepsHeaderImage" class="hero-img">
 
-<p id="activityComment"></p>
+<p id="activity_comment"></p>
 
 <div id="stepsGrid" class="steps-grid"></div>
 
@@ -252,7 +252,7 @@ body {
 
 <div>
 <img id="feedbackImage" >
-<p id="actComment"></p>
+<p id="feedback_comment"></p>
 
 </div>
 
@@ -271,7 +271,7 @@ body {
 
 const id = window.location.pathname.split("/").pop();
 
-fetch(`/api/activities/${id}`)
+fetch(`/api/activities/${id}/data`)
 .then(r => r.json())
 .then(data => {
 
@@ -283,7 +283,7 @@ document.getElementById("heroImage").src =
 `/storage/${data.resources[0].file_path}`;
 
 document.getElementById("skillsBox").innerHTML =
-(data.skills_competences || "")
+(data.skills_competencies || "")
 .split(",")
 .map(i => `<li>${i}</li>`).join("");
 
@@ -292,10 +292,11 @@ data.overview;
 
 
 /* SECTION 2 */
-document.getElementById("rodinImage").src =
-`/storage/${data.resources[1].file_path}`;
+//document.getElementById("rodinImage").src =
+//`/storage/${data.resources[1].file_path}`;
+document.getElementById("rodinImage").src = `/storage/activities/Picture1.1.2.png`;
 
-document.getElementById("rodinComment").innerText =
+document.getElementById("rodin_comment").innerText =
 data.rodin_comment;
 
 document.getElementById("materialsBox").innerHTML =
@@ -305,11 +306,12 @@ document.getElementById("materialsBox").innerHTML =
 
 
 /* SECTION 3 */
-document.getElementById("stepsHeaderImage").src =
-`/storage/${data.resources[2].file_path}`;
+//document.getElementById("stepsHeaderImage").src =
+//`/storage/${data.resources[2].file_path}`;
+document.getElementById("rodinImage").src = `/storage/activities/Picture1.2.1.png`;
 
-document.getElementById("activityComment").innerText =
-data.comment;
+document.getElementById("activity_comment").innerText =
+data.activity_comment;
 
 document.getElementById("stepsGrid").innerHTML =
 data.steps.map(step => `
@@ -321,13 +323,13 @@ data.steps.map(step => `
 
 
 /* SECTION 4 */
-document.getElementById("largeImage").src =
-`/storage/${data.resources[3].file_path}`;
-
+//document.getElementById("largeImage").src =
+//`/storage/${data.resources[3].file_path}`;
+document.getElementById("rodinImage").src = `/storage/activities/Picture1.3.1.png`;
 let toggled = false;
 
 document.getElementById("switchImage").src =
-`/storage/${data.resources[4].file_path}`;
+`/storage/${data.resources[1].file_path}`;
 
 document.getElementById("switchBtn").onclick = () => {
 
@@ -338,8 +340,8 @@ img.style.opacity = 0;
 setTimeout(() => {
 
 img.src = toggled
-? `/storage/${data.resources[4].file_path}`
-: `/storage/${data.resources[5].file_path}`;
+? `/storage/${data.resources[1].file_path}`
+: `/storage/${data.resources[2].file_path}`;
 
 img.style.opacity = 1;
 
@@ -395,6 +397,7 @@ e.dataTransfer.setData("text", e.target.src);
 
 /* SCROLL ANIMATION */
 const sections = document.querySelectorAll(".section-animate");
+
 
 const observer = new IntersectionObserver(entries => {
 entries.forEach(entry => {

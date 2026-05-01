@@ -27,13 +27,13 @@ class CoordinatorController extends Controller
 /**
  * Generate a random secure password
  */
-private function generateRandomPassword($length = 10)
+private function generateRandomPassword(int $length = 10): string
 {
     $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
     return substr(str_shuffle($chars), 0, $length);
 }
 
-private function calculateCurrentAge($dateOfBirth)
+private function calculateCurrentAge(?string $dateOfBirth)
 {
     if (!$dateOfBirth) return null;
     $dob = new \DateTime($dateOfBirth);
@@ -48,14 +48,11 @@ private function calculateCurrentAge($dateOfBirth)
     return $age;
 }
 
-private function getSuggestedClassByAge($age)
+private function getSuggestedClassByAge(?int $age)
 {
-    // Age to grade level mapping (December 31 cutoff)
-    // Age 3 → KG1 (grade_level 0)
-    // Age 4 → KG2 (grade_level 1)
-    // Age 5 → KG3 (grade_level 2)
-    // Age 6 → Grade 1 (grade_level 3)
-    // Age 7 → Grade 2 (grade_level 4)
+    if ($age === null) {
+        return null;
+    }
 
     $gradeLevel = $age - 3; // Age 3 = grade 0, Age 4 = grade 1, etc.
 
@@ -74,7 +71,7 @@ public function getStudents()
     $students = DB::table('students')
         ->leftJoin('parent_student', 'students.id', '=', 'parent_student.student_id')
         ->leftJoin('parents', 'parent_student.parent_id', '=', 'parents.id')
-        ->select('students.*', 'parents.full_name as parent_name')
+        ->select(['students.*', 'parents.full_name as parent_name'])
         ->get();
 
     foreach ($students as $student) {
@@ -88,7 +85,7 @@ public function getStudents()
     return response()->json($students);
 }
 
-private function calculateAgeOnDec31($dateOfBirth)
+private function calculateAgeOnDec31(?string $dateOfBirth)
 {
     if (!$dateOfBirth) return null;
     $dob = new \DateTime($dateOfBirth);
@@ -100,7 +97,7 @@ private function calculateAgeOnDec31($dateOfBirth)
     /**
      * Get a single student for editing.
      */
-    public function getStudent($id)
+    public function getStudent(int $id)
     {
         $student = DB::table('students')->where('id', $id)->first();
         $parentLink = DB::table('parent_student')->where('student_id', $id)->first();
@@ -115,7 +112,7 @@ private function calculateAgeOnDec31($dateOfBirth)
     /**
      * Update a student's information.
      */
-    public function updateStudent(Request $request, $id)
+    public function updateStudent(Request $request, int $id)
     {
         try {
             DB::table('students')->where('id', $id)->update([
@@ -172,7 +169,7 @@ private function calculateAgeOnDec31($dateOfBirth)
     /**
      * Delete a student and all related records.
      */
-    public function deleteStudent($id)
+    public function deleteStudent(int $id)
     {
         try {
             DB::table('enrollments')->where('student_id', $id)->delete();
@@ -189,7 +186,7 @@ private function calculateAgeOnDec31($dateOfBirth)
     }
 
 
-    public function getAvailableStudentsForSection($sectionId)
+    public function getAvailableStudentsForSection(int $sectionId)
 {
     $section = DB::table('sections')->where('id', $sectionId)->first();
     if (!$section) {
@@ -246,7 +243,7 @@ private function calculateAgeOnDec31($dateOfBirth)
     /**
      * Remove a student from a section.
      */
-    public function removeStudentFromSection($sectionId, $studentId)
+    public function removeStudentFromSection(int $sectionId, int $studentId)
     {
         try {
             DB::table('enrollments')
@@ -264,13 +261,13 @@ private function calculateAgeOnDec31($dateOfBirth)
      */
     public function getStudentsList()
     {
-        $students = DB::table('students')->select('id', 'full_name')->orderBy('full_name')->get();
+        $students = DB::table('students')->select(['id', 'full_name'])->orderBy('full_name')->get();
         return response()->json($students);
     }
 
     // ==================== CLASS METHODS ====================
 
-    public function getClass($id)
+    public function getClass(int $id)
     {
         $class = DB::table('classes')->where('id', $id)->first();
         return response()->json($class);
@@ -282,7 +279,7 @@ private function calculateAgeOnDec31($dateOfBirth)
         return response()->json($classes);
     }
 
-    public function deleteClass($id)
+    public function deleteClass(int $id)
     {
         try {
             DB::table('classes')->where('id', $id)->delete();
@@ -292,7 +289,7 @@ private function calculateAgeOnDec31($dateOfBirth)
         }
     }
 
-    public function updateClass(Request $request, $id)
+    public function updateClass(Request $request, int $id)
     {
         try {
             DB::table('classes')->where('id', $id)->update([
@@ -328,11 +325,11 @@ private function calculateAgeOnDec31($dateOfBirth)
 
     public function getTeachers()
     {
-        $teachers = DB::table('teachers')->select('id', 'full_name', 'email', 'phone')->get();
+        $teachers = DB::table('teachers')->select(['id', 'full_name', 'email', 'phone'])->get();
         return response()->json($teachers);
     }
 
-    public function deleteTeacher($id)
+    public function deleteTeacher(int $id)
     {
         try {
             $teacher = DB::table('teachers')->where('id', $id)->first();
@@ -346,7 +343,7 @@ private function calculateAgeOnDec31($dateOfBirth)
         }
     }
 
-    public function updateTeacher(Request $request, $id)
+    public function updateTeacher(Request $request, int $id)
     {
         try {
             DB::table('teachers')->where('id', $id)->update([
@@ -397,7 +394,7 @@ private function calculateAgeOnDec31($dateOfBirth)
 
     public function getTeachersList()
     {
-        $teachers = DB::table('teachers')->select('id', 'full_name')->get();
+        $teachers = DB::table('teachers')->select(['id', 'full_name'])->get();
         return response()->json($teachers);
     }
 
@@ -405,11 +402,11 @@ private function calculateAgeOnDec31($dateOfBirth)
 
     public function getParents()
     {
-        $parents = DB::table('parents')->select('id', 'full_name', 'email', 'phone')->get();
+        $parents = DB::table('parents')->select(['id', 'full_name', 'email', 'phone'])->get();
         return response()->json($parents);
     }
 
-    public function deleteParent($id)
+    public function deleteParent(int $id)
     {
         try {
             $parent = DB::table('parents')->where('id', $id)->first();
@@ -423,7 +420,7 @@ private function calculateAgeOnDec31($dateOfBirth)
         }
     }
 
-    public function updateParent(Request $request, $id)
+    public function updateParent(Request $request, int $id)
     {
         try {
             DB::table('parents')->where('id', $id)->update([
@@ -531,20 +528,20 @@ private function calculateAgeOnDec31($dateOfBirth)
 
     // ==================== SECTION METHODS ====================
 
-    public function getSections($classId)
+    public function getSections(int $classId)
     {
         $sections = DB::table('sections')->where('class_id', $classId)->get();
         foreach ($sections as $section) {
             $section->students = DB::table('enrollments')
                 ->join('students', 'enrollments.student_id', '=', 'students.id')
                 ->where('enrollments.section_id', $section->id)
-                ->select('students.id', 'students.full_name')
+                ->select(['students.id', 'students.full_name'])
                 ->get();
         }
         return response()->json($sections);
     }
 
-    public function getSectionsWithDetails($classId)
+    public function getSectionsWithDetails(int $classId)
     {
         $sections = DB::table('sections')
             ->where('class_id', $classId)
@@ -556,13 +553,13 @@ private function calculateAgeOnDec31($dateOfBirth)
             $section->students = DB::table('enrollments')
                 ->join('students', 'enrollments.student_id', '=', 'students.id')
                 ->where('enrollments.section_id', $section->id)
-                ->select('students.id', 'students.full_name')
+                ->select(['students.id', 'students.full_name'])
                 ->get();
         }
         return response()->json($sections);
     }
 
-    public function getSectionStudentCount($sectionId)
+    public function getSectionStudentCount(int $sectionId)
     {
         $count = DB::table('enrollments')->where('section_id', $sectionId)->count();
         return response()->json(['count' => $count]);
@@ -586,7 +583,7 @@ private function calculateAgeOnDec31($dateOfBirth)
         }
     }
 
-    public function updateSection(Request $request, $id)
+    public function updateSection(Request $request,int $id)
     {
         try {
             $updateData = [
@@ -604,7 +601,7 @@ private function calculateAgeOnDec31($dateOfBirth)
         }
     }
 
-    public function deleteSection($id)
+    public function deleteSection(int $id)
     {
         try {
             DB::table('enrollments')->where('section_id', $id)->delete();
@@ -623,7 +620,7 @@ private function calculateAgeOnDec31($dateOfBirth)
         return response()->json($activities);
     }
 
-    public function deleteActivity($id)
+    public function deleteActivity(int $id)
     {
         try {
             DB::table('activities')->where('id', $id)->delete();
@@ -633,7 +630,7 @@ private function calculateAgeOnDec31($dateOfBirth)
         }
     }
 
-public function getSection($id)
+public function getSection(int $id)
 {
     try {
         $section = DB::table('sections')->where('id', $id)->first();
@@ -749,7 +746,7 @@ public function getCoordinatorRecipients()
 }
 
 // API: Get full conversation between coordinator and a specific participant
-public function getCoordinatorConversation($participantId)
+public function getCoordinatorConversation(int $participantId)
 {
     $userId = Auth::id();
 
@@ -861,7 +858,7 @@ public function replyToCoordinatorMessage(Request $request)
 }
 
 // Helper for message user info
-private function getMessageUserInfo($userId, $type)
+private function getMessageUserInfo(int $userId, string $type)
 {
     $user = DB::table('users')->where('id', $userId)->first();
     $name = $user->email;
@@ -881,7 +878,7 @@ private function getMessageUserInfo($userId, $type)
 
 
 // Soft delete message
-public function deleteMessage($id)
+public function deleteMessage(int $id)
 {
     try {
         $userId = Auth::id();
@@ -912,7 +909,7 @@ public function deleteMessage($id)
     }
 }
 
-public function markMessagesAsRead($senderId)
+public function markMessagesAsRead(int $senderId)
 {
     $userId = Auth::id();
 

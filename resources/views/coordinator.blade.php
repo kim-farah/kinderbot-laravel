@@ -602,13 +602,6 @@ body.dark-mode #newMessageModal textarea {
     transform: scale(1.1);
 }
 
-/*
-#conversationMessages button {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    z-index: 9999 !important;
-}*/
 .coordinator-message {
     text-align: right;
     margin-bottom: 5px;
@@ -656,7 +649,6 @@ body.dark-mode #newMessageModal textarea {
             <div class="logo">Kinderbot CMS</div>
             <div class="user-info">
                 <span>👤 Coordinator</span>
-                <!--<button class="logout-btn" onclick="location.href='{{ route('login') }}'">Logout</button>-->
                 <form method="POST" action="{{ route('logout') }}" style="display:inline;">
     @csrf
     <button type="submit" class="logout-btn">Logout</button>
@@ -717,37 +709,31 @@ body.dark-mode #newMessageModal textarea {
 </div>
                     <!-- Classes Section -->
                     <div class="section-header"><h2>Classes</h2>
-                        <!--<button class="btn-primary" id="newClassBtn">+ New Class</button>-->
                     </div>
                     <div id="classCardsContainer" class="class-cards"></div>
 
                     <!-- Teachers Section -->
                     <div class="section-header"><h2>Teachers</h2>
-                        <!--<button class="btn-primary" id="newTeacherBtnDashboard">+ New Teacher</button>-->
                     </div>
                     <div id="teachersDashboardContainer" class="data-table"></div>
 
                     <!-- Parents Section -->
                     <div class="section-header"><h2>Parents</h2>
-                        <!--<button class="btn-primary" id="newParentBtnDashboard">+ New Parent</button>-->
                     </div>
                     <div id="parentsDashboardContainer" class="data-table"></div>
 
                     <!-- Students Section -->
                     <div class="section-header"><h2>Students</h2>
-                        <!--<button class="btn-primary" id="newStudentBtnDashboard">+ New Student</button>-->
+
                     </div>
                     <div id="studentsDashboardContainer" class="data-table"></div>
 
                     <!-- All Activities Section -->
                     <div class="section-header"><h2>All Activities</h2>
-                        <!--<button class="btn-primary" id="newActivityBtn">+ New Activity</button>-->
                     </div>
                     <div id="allActivitiesContainer" class="data-table"></div>
 
-                    <!-- Recent Activities Taught Section -->
-                    <div class="section-header"><h2>Recent Activities Taught</h2></div>
-                    <div id="recentActivitiesContainer" class="data-table"></div>
+
                 </div>
 
                 <!-- CLASSES PAGE -->
@@ -778,7 +764,6 @@ body.dark-mode #newMessageModal textarea {
                 <div id="activitiesPage" class="page-content">
                     <div class="section-header"><h2>All Activities</h2><button class="btn-primary" id="newActivityBtn2">+ New Activity</button></div>
                     <div id="activitiesTableContainer" class="data-table"></div>
-                    <div class="section-header"><h2>Recent Activities Taught</h2></div>
                     <div id="recentActivitiesTableContainer" class="data-table"></div>
                 </div>
 
@@ -806,15 +791,12 @@ body.dark-mode #newMessageModal textarea {
 
     <!-- Modals (same as before) -->
     <div id="sectionsModal" class="modal"><div class="modal-content"><div class="modal-header"><h3 id="modalClassName">Class Sections</h3><button class="modal-close" onclick="closeSectionsModal()">&times;</button></div><div class="modal-body" id="sectionsModalBody"></div></div></div>
-    <div id="addSectionModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Add New Section</h3><button class="modal-close" onclick="closeAddSectionModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Section Name</label><input type="text" id="newSectionName" placeholder="e.g., A, B, Morning" class="form-input"></div><div class="form-group"><label>Teacher</label><select id="newSectionTeacher" class="form-select"></select></div><div class="form-group"><label>Max Students</label><input type="number" id="newSectionMaxStudents" value="25" class="form-input"></div><div class="form-group"><label>Schedule</label><input type="text" id="newSectionSchedule" placeholder="e.g., 9:00-10:30 AM" class="form-input"></div><div class="form-actions"><button class="btn-secondary" onclick="closeAddSectionModal()">Cancel</button><button class="btn-primary" onclick="saveNewSection()">Add Section</button></div></div></div></div>
+    <div id="addSectionModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Add New Section</h3><button class="modal-close" onclick="closeAddSectionModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Section Name</label><input type="text" id="newSectionName" placeholder="e.g., A, B" class="form-input"></div><div class="form-group"><label>Teacher</label><select id="newSectionTeacher" class="form-select"></select></div><div class="form-group"><label>Max Students</label><input type="number" id="newSectionMaxStudents" value="25" class="form-input"></div><div class="form-actions"><button class="btn-cancel" onclick="closeAddSectionModal()">Cancel</button><button class="btn-primary" onclick="saveNewSection()">Add Section</button></div></div></div></div>
     <div id="addStudentToSectionModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Add Student to Section</h3><button class="modal-close" onclick="closeAddStudentToSectionModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Select Student</label><select id="existingStudentId" class="form-select"><option value="">-- Select Student --</option></select></div><div class="form-actions"><button class="btn-cancel" onclick="closeAddStudentToSectionModal()">Cancel</button><button class="btn-primary" onclick="saveExistingStudent()">Add Student</button></div></div></div></div>
     <div id="newStudentModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Add New Student</h3><button class="modal-close" onclick="closeNewStudentModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Student Name</label><input type="text" id="newStudentName" class="form-input" placeholder="Full name"></div><div class="form-group"><label>Date of Birth</label><input type="date" id="newStudentDob" class="form-input"><small style="color:gray;">Age will be calculated automatically</small></div><div class="form-group"><label>Parent</label><select id="newStudentParentId" class="form-select"><option value="">-- Select Parent --</option></select></div><div class="form-actions"><button class="btn-cancel" onclick="closeNewStudentModal()">Cancel</button><button class="btn-primary" onclick="saveNewStudentRecord()">Save Student</button></div></div></div></div>
     <div id="editClassModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Edit Class</h3><button class="modal-close" onclick="closeEditClassModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Class Name</label><input type="text" id="editClassName" class="form-input"></div><div class="form-group"><label>Teacher</label><input type="text" id="editClassTeacher" class="form-input"></div><div class="form-actions"><button class="btn-cancel" onclick="closeEditClassModal()">Cancel</button><button class="btn-primary" onclick="saveEditedClass()">Save</button></div></div></div></div>
     <div id="editTeacherModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Edit Teacher</h3><button class="modal-close" onclick="closeEditTeacherModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Name</label><input type="text" id="editTeacherName" class="form-input"></div><div class="form-group"><label>Email</label><input type="email" id="editTeacherEmail" class="form-input"></div><div class="form-group"><label>Phone</label><input type="text" id="editTeacherPhone" class="form-input"></div><div class="form-group"><label>Class</label><input type="text" id="editTeacherClass" class="form-input"></div><div class="form-actions"><button class="btn-secondary" onclick="closeEditTeacherModal()">Cancel</button><button class="btn-primary" onclick="saveEditedTeacher()">Save</button></div></div></div></div>
     <div id="editParentModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Edit Parent</h3><button class="modal-close" onclick="closeEditParentModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Name</label><input type="text" id="editParentName" class="form-input"></div><div class="form-group"><label>Email</label><input type="email" id="editParentEmail" class="form-input"></div><div class="form-group"><label>Phone</label><input type="text" id="editParentPhone" class="form-input"></div><div class="form-group"><label>Child</label><input type="text" id="editParentChild" class="form-input"></div><div class="form-actions"><button class="btn-secondary" onclick="closeEditParentModal()">Cancel</button><button class="btn-primary" onclick="saveEditedParent()">Save</button></div></div></div></div>
-    <div id="editActivityModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Edit Activity</h3><button class="modal-close" onclick="closeEditActivityModal()">&times;</button></div><div class="modal-body"><div class="form-group"><label>Title</label><input type="text" id="editActivityTitle" class="form-input"></div><div class="form-group"><label>Class</label><select id="editActivityClass" class="form-select"><option>KG1</option><option>KG2</option><option>KG3</option></select></div><div class="form-group"><label>Duration (min)</label><input type="number" id="editActivityDuration" class="form-input"></div><div class="form-group"><label>Difficulty</label><select id="editActivityDifficulty" class="form-select"><option>Easy</option><option>Medium</option><option>Hard</option></select></div><div class="form-group"><label>Status</label><select id="editActivityStatus" class="form-select"><option value="published">Published</option><option value="draft">Draft</option></select></div><div class="form-actions"><button class="btn-secondary" onclick="closeEditActivityModal()">Cancel</button><button class="btn-primary" onclick="saveEditedActivity()">Save</button></div></div></div></div>
-    <div id="editStudentModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Edit Student</h3><button class="modal-close" onclick="closeEditStudentModal()">&times;</button></div><div class="modal-body"><input type="hidden" id="editStudentId"><div class="form-group"><label>Student Name</label><input type="text" id="editStudentName" class="form-input"></div><div class="form-group"><label>Date of Birth</label><input type="date" id="editStudentDob" class="form-input"></div><div class="form-group"><label>Parent</label><select id="editStudentParentId" class="form-select"></select></div><div class="form-actions"><button class="btn-cancel" onclick="closeEditStudentModal()">Cancel</button><button class="btn-primary" onclick="updateStudentRecord()">Save Changes</button></div></div></div></div>
-
 
 
 <!-- New Chat Modal -->
@@ -1059,21 +1041,6 @@ function loadClassesTable() {
             container.innerHTML = html;
         });
 }
-
-    /*
-    function addNewClass() {
-        const className = prompt('Enter class name:');
-        if (!className) return;
-        const gradeLevel = prompt('Grade level (0=KG1,1=KG2,2=KG3,3=Grade1,4=Grade2):');
-        if (gradeLevel === null) return;
-        const ageRange = prompt('Age range (e.g., "Ages 6-7"):');
-        if (ageRange === null) return;
-        fetch('{{ route("classes.store") }}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-            body: JSON.stringify({ name: className, grade_level: parseInt(gradeLevel), age_range: ageRange })
-        }).then(response => response.json()).then(data => { if (data.success) { alert('✅ Class added!'); location.reload(); } else { alert('❌ Error: ' + data.message); } });
-    }*/
    function addNewClass() {
     const className = prompt('Enter class name:');
     if (!className) return;
@@ -1129,84 +1096,87 @@ function loadClassesTable() {
     }
 
     // ==================== ACTIVITY FUNCTIONS ====================
+function displayAllActivities() {
+    const container = document.getElementById('allActivitiesContainer');
+    if (!container) return;
+    if (activitiesData.length === 0) {
+        container.innerHTML = '<p style="text-align:center;padding:40px;">No activities yet.</p>';
+        return;
+    }
 
-    function displayAllActivities() {
-        const container = document.getElementById('allActivitiesContainer');
-        if (!container) return;
-        if (activitiesData.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No activities yet.</p>'; return; }
-        let html = '<table class="data-table"><thead><tr><th>Activity</th><th>Class</th><th>Duration</th><th>Status</th></tr></thead><tbody>';
-        activitiesData.forEach(a => {
+    let html = '<table class="data-table"><thead><tr>';
+    html += '<th>Title</th>';
+    html += '<th>Class</th>';
+    html += '<th>Status</th>';
+    html += '<th>Created At</th>';
+    html += '</thead><tbody>';
+
+    activitiesData.forEach(a => {
+        const classObj = classesData.find(c => c.id == a.class_id);
+        const className = classObj ? classObj.name : 'Unknown';
+        const createdDate = a.created_at ? new Date(a.created_at).toLocaleDateString() : '-';
+
+        html += `<tr>
+            <td><strong>${escapeHtml(a.title)}</strong></td>
+            <td>${escapeHtml(className)}</td>
+            <td><span class="badge ${a.is_published ? 'published' : 'draft'}">${a.is_published ? 'Published' : 'Draft'}</span></td>
+            <td>${createdDate}</td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+function loadActivitiesTable() {
+    fetch('/api/activities').then(r => r.json()).then(data => {
+        const container = document.getElementById('activitiesTableContainer');
+        if (data.length === 0) {
+            container.innerHTML = '<p style="text-align:center;padding:40px;">No activities yet.</p>';
+            return;
+        }
+
+        let html = '<table class="data-table"><thead><tr>';
+        html += '<th>Title</th>';
+        html += '<th>Class</th>';
+        html += '<th>Status</th>';
+        html += '<th>Created At</th>';
+        html += '<th>Actions</th>';
+        html += '</thead><tbody>';
+
+        data.forEach(a => {
+            const classObj = classesData.find(c => c.id == a.class_id);
+            const className = classObj ? classObj.name : 'Unknown';
+            const createdDate = a.created_at ? new Date(a.created_at).toLocaleDateString() : '-';
+
             html += `<tr>
-                <td><strong>${a.title}</strong></td>
-                <td>KG${a.class_id}</td>
-                <td>${a.estimated_duration || 30} min</td>
+                <td><strong>${escapeHtml(a.title)}</strong></td>
+                <td>${escapeHtml(className)}</td>
                 <td><span class="badge ${a.is_published ? 'published' : 'draft'}">${a.is_published ? 'Published' : 'Draft'}</span></td>
+                <td>${createdDate}</td>
+                <td>
+                    <button class="btn-small" onclick="viewActivity(${a.id})">👁️ View</button>
+                    <button class="btn-small" onclick="editActivity(${a.id})">✏️ Edit</button>
+                    <button class="btn-small btn-danger" onclick="deleteActivity(${a.id}, '${escapeHtml(a.title)}')">🗑️ Delete</button>
+                </td>
             </tr>`;
         });
+
         html += '</tbody></table>';
         container.innerHTML = html;
-    }
+    });
+}
 
-    function loadActivitiesTable() {
-        fetch('/api/activities').then(r => r.json()).then(data => {
-            const container = document.getElementById('activitiesTableContainer');
-            if (data.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No activities yet.</p>'; return; }
-            let html = '<table class="data-table"><thead><tr><th>Title</th><th>Class</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-            data.forEach(a => {
-                html += `<tr>
-                    <td><strong>${a.title}</strong></td>
-                    <td>${a.class_id}</td>
-                    <td>${a.estimated_duration || 30} min</td>
-                    <td>${a.is_published ? 'Published' : 'Draft'}</td>
-                    <td><button class="btn-small" onclick="editActivity(${a.id})">✏️ Edit</button> <button class="btn-small btn-danger" onclick="deleteActivity(${a.id}, '${a.title}')">🗑️ Delete</button></td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
-            container.innerHTML = html;
-        });
-    }
 
-    function loadRecentActivitiesTable() {
-        const container = document.getElementById('recentActivitiesTableContainer');
-        if (!container) return;
-        if (teacherLogData.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No activities taught yet.</p>'; return; }
-        let html = '<table class="data-table"><thead><tr><th>Activity</th><th>Class</th><th>Teacher</th><th>Duration</th><th>Time</th></tr></thead><tbody>';
-        teacherLogData.forEach(l => {
-            const r = getRelativeTime(l.timestamp);
-            html += `<tr>
-                <td><strong>${l.activity}</strong></td>
-                <td>${l.class}</td>
-                <td>👩‍🏫 ${l.teacher}</td>
-                <td>${l.duration}</td>
-                <td><span class="time-badge ${r.class}">${r.text}</span></td>
-            </tr>`;
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    }
-
-    function displayTeacherLog() {
-        const container = document.getElementById('recentActivitiesContainer');
-        if (!container) return;
-        if (teacherLogData.length === 0) { container.innerHTML = '<p style="text-align:center;padding:40px;">No activities taught yet.</p>'; return; }
-        let html = '<table class="data-table"><thead><tr><th>Activity</th><th>Class</th><th>Teacher</th><th>Duration</th><th>Time</th></tr></thead><tbody>';
-        teacherLogData.forEach(l => {
-            const r = getRelativeTime(l.timestamp);
-            html += `<tr>
-                <td><strong>${l.activity}</strong></td>
-                <td>${l.class}</td>
-                <td>👩‍🏫 ${l.teacher}</td>
-                <td>${l.duration}</td>
-                <td><span class="time-badge ${r.class}">${r.text}</span></td>
-            </tr>`;
-        });
-        html += '</tbody></tr>';
-        container.innerHTML = html;
-    }
-
-    function editActivity(id) { alert('Edit activity coming soon!'); }
     function deleteActivity(id, title) { if (confirm(`Delete "${title}"?`)) { fetch(`/api/activities/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } }); } }
 
+  function editActivity(id) {
+    window.location.href = `/activities/${id}/edit`;
+}
+
+function viewActivity(id) {
+    window.location.href = `/activities/${id}`;
+}
     // ==================== SECTION FUNCTIONS ====================
 
     function viewSections(classId) {
@@ -1258,7 +1228,7 @@ function loadClassesTable() {
                 <div><label>Section Name</label><input type="text" id="newSectionName" class="form-input"></div>
                 <div><label>Teacher</label><select id="newSectionTeacher" class="form-select">${teacherOptions}</select></div>
                 <div><label>Max Students</label><input type="number" id="newSectionMaxStudents" value="25" class="form-input"></div>
-                <div class="form-actions"><button class="btn-secondary" onclick="closeAddSectionModal()">Cancel</button><button class="btn-primary" onclick="saveNewSection()">Add Section</button></div>
+                <div class="form-actions"><button class="btn-cancel" onclick="closeAddSectionModal()">Cancel</button><button class="btn-primary" onclick="saveNewSection()">Add Section</button></div>
             `;
         });
         document.getElementById('sectionsModal').style.display = 'none';
@@ -2093,12 +2063,11 @@ async function updateTotalUnreadCount() {
             if (pageName === 'teachers') loadTeachersTable();
             if (pageName === 'parents') loadParentsTable();
             if (pageName === 'students') loadStudentsTable();
-            if (pageName === 'activities') { loadActivitiesTable(); loadRecentActivitiesTable(); }
+            if (pageName === 'activities') { loadActivitiesTable();}
             if (pageName === 'messages') displayCoordinatorMessages();
         });
     });
 
-    // ==================== SETTINGS BUTTONS ====================
 
     document.getElementById('newClassBtn')?.addEventListener('click', addNewClass);
     document.getElementById('newClassBtn2')?.addEventListener('click', addNewClass);
@@ -2108,9 +2077,8 @@ async function updateTotalUnreadCount() {
     document.getElementById('newActivityBtn2')?.addEventListener('click', () => window.location.href = '{{ route("create-activity") }}');
     document.getElementById('newCoordinatorMessageBtn')?.addEventListener('click', openCoordinatorMessageModal);
 
+    // ==================== SETTINGS BUTTONS ====================
     document.getElementById('schoolYearBtn')?.addEventListener('click', () => { const ny = prompt('School year (YYYY-YYYY):', '2024-2025'); if (ny) document.getElementById('schoolYearBtn').innerText = ny; });
-    document.getElementById('themeBtn')?.addEventListener('click', () => { document.body.classList.toggle('dark-mode'); document.getElementById('themeBtn').innerHTML = document.body.classList.contains('dark-mode') ? 'Dark Mode 🌙' : 'Light Mode ☀️'; localStorage.setItem('coordinator_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light'); });
-    document.getElementById('notificationsBtn')?.addEventListener('click', () => { const btn = document.getElementById('notificationsBtn'); btn.innerHTML = btn.innerHTML === 'Enabled ✓' ? 'Disabled ✗' : 'Enabled ✓'; alert('Notifications ' + (btn.innerHTML === 'Enabled ✓' ? 'enabled' : 'disabled')); });
     document.getElementById('exportBtn')?.addEventListener('click', () => { const data = { classes: classesData, activities: activitiesData, teacherLog: teacherLogData, exportDate: new Date().toISOString() }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'kinderbot_export.json'; a.click(); alert('Data exported!'); });
 
     const savedTheme = localStorage.getItem('coordinator_theme');
@@ -2120,7 +2088,7 @@ async function updateTotalUnreadCount() {
     loadSummaryCards();
     displayClassesDashboard();
     displayAllActivities();
-    displayTeacherLog();
+    //displayTeacherLog();
     loadTeachersForDashboard();
     loadParentsForDashboard();
     loadStudentsForDashboard();

@@ -27,7 +27,7 @@
             font-family: 'Poppins', 'Segoe UI', sans-serif;
             background: var(--light-gray);
             height: 100vh;
-            overflow: hidden;
+            /*overflow: hidden;*/
         }
 
         .dashboard-container {
@@ -308,117 +308,180 @@
         body.dark-mode .btn-secondary:hover {
             background: #1f2a4a;
         }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 8px; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .btn-primary { background: #FF6B35; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-secondary { background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .step-item { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+        h3 { margin: 20px 0 15px 0; color: #1E3A5F; }
+        hr { margin: 20px 0; }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <div class="top-bar">
-            <div class="logo">Kinderbot CMS</div>
-            <div class="user-info">
-                <span>👤 Coordinator</span>
-                <button class="logout-btn" onclick="location.href='{{ route('login') }}'">Logout</button>
-            </div>
-        </div>
+    <div class="form-container">
+        <h1>{{ isset($is_edit) ? 'Edit Activity' : 'Create New Activity' }}</h1>
+        <p class="form-subtitle">Fill in the details below to create a new activity <span style="color: red;">* = required</span></p>
 
-        <div class="main-layout">
-            <div class="sidebar">
-    <nav>
-        <ul>
-            <li data-page="dashboard" onclick="window.location.href='{{ route('coordinator') }}'">📊 Dashboard</li>
-            <li data-page="classes" onclick="window.location.href='{{ route('coordinator') }}'">📚 Classes</li>
-            <li data-page="teachers" onclick="window.location.href='{{ route('coordinator') }}'">👥 Teachers</li>
-            <li data-page="parents" onclick="window.location.href='{{ route('coordinator') }}'">👨‍👩‍👧 Parents</li>
-            <li data-page="students" onclick="window.location.href='{{ route('coordinator') }}'">👧 Students</li>
-            <li data-page="activities" class="active" onclick="window.location.href='{{ route('coordinator') }}'">📝 Activities</li>
-            <li data-page="messages" onclick="window.location.href='{{ route('coordinator') }}'">💬 Messages</li>
-            <li data-page="settings" onclick="window.location.href='{{ route('coordinator') }}'">⚙️ Settings</li>
-        </ul>
-    </nav>
+<form method="POST" action="{{ isset($is_edit) ? route('activities.update', $activity->id) : route('activities.store') }}" enctype="multipart/form-data">
+    @csrf
+    @if(isset($is_edit))
+        @method('PUT')
+    @endif
+
+            <!-- ========== BASIC INFORMATION ========== -->
+            <h3>Basic Information</h3>
+
+            <div class="form-group">
+                <label>Activity Title <span style="color: red;">*</span></label>
+                <input type="text" name="title" class="form-input" value="{{ old('title', $activity->title ?? '') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Class <span style="color: red;">*</span></label>
+                <select name="class" class="form-select" required>
+    <option value="">-- Select a class --</option>
+    @foreach($classes as $class)
+        <option value="{{ $class->name }}" {{ (isset($activity) && $activity->class_id == $class->id) ? 'selected' : '' }}>
+            {{ $class->name }}
+        </option>
+    @endforeach
+</select>
+            </div>
+
+            <div class="form-group">
+                <label>Objective <span style="color: red;">*</span></label>
+                <textarea name="objective" rows="3" class="form-textarea" required>{{ old('objective', $activity->objective ?? '') }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Overview <span style="color: red;">*</span></label>
+                <textarea name="overview" rows="4" class="form-textarea" required>{{ old('overview', $activity->overview ?? '') }}</textarea>
+
+            </div>
+
+            <div class="form-group">
+    <label>Skills & Competencies <span style="color: red;">*</span></label>
+    <textarea name="skills" rows="3" class="form-textarea" placeholder="Fine motor skills&#10;Hand-eye coordination&#10;Teamwork&#10;Creative thinking" required>{{ old('skills', isset($activity) ? str_replace(',', "\n", $activity->skills_competencies) : '') }}</textarea>
+    <small>Enter one competency per line</small>
 </div>
 
-            <div class="content">
-                <div class="form-container">
-                    <h1>Create New Activity</h1>
-                    <p class="form-subtitle">Fill in the details below to create a new activity <span style="color: red;">* = required</span></p>
+<div class="form-group">
+    <label>Materials Needed <span style="color: red;">*</span></label>
+    <textarea name="materials" rows="3" class="form-textarea" placeholder="LEGO kit&#10;Coloring pencils&#10;Scissors" required>{{ old('materials', isset($activity) ? str_replace(',', "\n", $activity->materials) : '') }}</textarea>
+    <small>Enter one material per line</small>
+</div>
 
-                    @if(session('success'))
-                        <div class="success-message" style="display: block;">{{ session('success') }}</div>
+            <!-- ========== COMMENTS ========== -->
+            <h3>Comments</h3>
+
+            <div class="form-group">
+                <label>Rodin Comment</label>
+                <textarea name="rodin_comment" rows="2" class="form-textarea">{{ old('rodin_comment', $activity->rodin_comment ?? '') }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Activity Comment</label>
+                <textarea name="activity_comment" rows="2" class="form-textarea">{{ old('activity_comment', $activity->activity_comment ?? '') }}</textarea>
+
+            </div>
+
+            <div class="form-group">
+                <label>Feedback Comment</label>
+                <textarea name="feedback_comment" rows="2" class="form-textarea">{{ old('feedback_comment', $activity->feedback_comment ?? '') }}</textarea>
+            </div>
+
+<!-- ========== RESOURCES (IMAGES) ========== -->
+<h3>Activity Images</h3>
+<p><small>Current images will be kept. Only upload new images if you want to replace them.</small></p>
+
+<div class="form-group">
+    <label>Hero Image</label>
+    <input type="file" name="resources[]" class="form-input" accept="image/*" {{ isset($is_edit) ? '' : 'required' }}>
+    <small>Main activity image</small>
+</div>
+
+<div class="form-group">
+    <label>Switch Image 1</label>
+    <input type="file" name="resources[]" class="form-input" accept="image/*">
+</div>
+
+<div class="form-group">
+    <label>Switch Image 2</label>
+    <input type="file" name="resources[]" class="form-input" accept="image/*">
+</div>
+
+
+<!-- ========== STEPS WITH IMAGES ========== -->
+<h3>Activity Steps</h3>
+<div id="steps-container">
+    @if(isset($steps) && count($steps) > 0)
+        @foreach($steps as $index => $step)
+            <div class="step-item">
+                <div class="form-group">
+                    <label>Step {{ $index + 1 }} Description <span style="color: red;">*</span></label>
+                    <textarea name="step_description[]" class="form-textarea" rows="2" required>{{ $step->description }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Step {{ $index + 1 }} Image</label>
+                    @if($step->image_path)
+                        <div style="margin-bottom: 10px;">
+                            <img src="/storage/{{ $step->image_path }}" style="max-width: 150px; border-radius: 8px; border: 1px solid #ddd;">
+                            <br>
+                        </div>
                     @endif
-
-                    <form method="POST" action="{{ route('activities.store') }}">
-                        @csrf
-                        <div class="form-group">
-                            <label>Activity Title <span style="color: red;">*</span></label>
-                            <input type="text" id="activityTitle" name="title" placeholder="e.g., Build a Robot" class="form-input" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Class <span style="color: red;">*</span></label>
-                            <select id="activityClass" name="class" class="form-select" required>
-                                <option value="">-- Select a class --</option>
-                                <option value="KG1">KG1</option>
-                                <option value="KG2">KG2</option>
-                                <option value="KG3">KG3</option>
-                                <option value="Grade 1">Grade 1</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Overview <span style="color: red;">*</span></label>
-                            <textarea id="activityOverview" name="overview" rows="4" class="form-textarea" placeholder="e.g., Ro-Din will build his first robot using LEGO parts..." required></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Skills and competencies <span style="color: red;">*</span></label>
-                            <textarea id="activitySkills" name="skills" rows="4" class="form-textarea" placeholder="e.g., Fine motor skills&#10;Hand-eye coordination&#10;Teamwork&#10;Creative thinking" required></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Materials Needed <span style="color: red;">*</span></label>
-                            <textarea id="activityMaterials" name="materials" rows="2" class="form-textarea" placeholder="e.g., LEGO kit • Coloring pencils • Split pins • Scissors" required></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Step-by-Step Instructions <span style="color: red;">*</span></label>
-                            <textarea id="activityInstructions" name="instructions" rows="5" class="form-textarea" placeholder="Step 1: Build the robot&#10;Step 2: Hold the handle in the back&#10;Step 3: Turn the handle&#10;Step 4: Manipulate and interpret" required></textarea>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group half">
-                                <label>Estimated Duration (minutes) <span style="color: red;">*</span></label>
-                                <input type="number" id="activityDuration" name="duration" placeholder="e.g., 30" class="form-input" required>
-                            </div>
-                            <div class="form-group half">
-                                <label>Difficulty Level <span style="color: red;">*</span></label>
-                                <div class="radio-group">
-                                    <label><input type="radio" name="difficulty" value="Easy" required> Easy</label>
-                                    <label><input type="radio" name="difficulty" value="Medium"> Medium</label>
-                                    <label><input type="radio" name="difficulty" value="Hard"> Hard</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group checkbox-group">
-                            <label>
-                                <input type="checkbox" name="publish" id="publishImmediately" checked> Publish immediately
-                            </label>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="button" class="btn-secondary" onclick="window.location.href='{{ route('coordinator') }}'">Cancel</button>
-                            <button type="submit" class="btn-primary">Create Activity</button>
-                        </div>
-                    </form>
+                    <input type="file" name="step_images[]" class="form-input" accept="image/*">
                 </div>
             </div>
+        @endforeach
+    @else
+        <div class="step-item">
+            <div class="form-group">
+                <label>Step 1 Description <span style="color: red;">*</span></label>
+                <textarea name="step_description[]" class="form-textarea" rows="2" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Step 1 Image</label>
+                <input type="file" name="step_images[]" class="form-input" accept="image/*">
+            </div>
         </div>
+    @endif
+</div>
+
+<button type="button" id="add-step-btn" class="btn-secondary">+ Add Another Step</button>
+            <!-- ========== PUBLISH ========== -->
+            <div class="form-group" style="margin-top: 20px;">
+                <label>
+                    <input type="checkbox" name="is_published" checked> Publish immediately
+                </label>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="window.location.href='{{ route('coordinator') }}'">Cancel</button>
+                <button type="submit" class="btn-primary">{{ isset($is_edit) ? 'Update Activity' : 'Create Activity' }}</button>
+            </div>
+        </form>
     </div>
 
     <script>
-        const savedTheme = localStorage.getItem('coordinator_theme');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-        }
+        // Add more steps dynamically
+        document.getElementById('add-step-btn').addEventListener('click', function() {
+            const container = document.getElementById('steps-container');
+            const stepCount = container.children.length + 1;
+            const newStep = document.createElement('div');
+            newStep.className = 'step-item';
+            newStep.innerHTML = `
+                <div class="form-group">
+                    <label>Step ${stepCount} Description</label>
+                    <textarea name="step_description[]" class="form-textarea" rows="2" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Step ${stepCount} Image</label>
+                    <input type="file" name="step_images[]" class="form-input" accept="image/*">
+                </div>
+            `;
+            container.appendChild(newStep);
+        });
     </script>
 </body>
 </html>

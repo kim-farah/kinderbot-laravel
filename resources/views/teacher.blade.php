@@ -458,7 +458,14 @@ body.dark-mode .recipient-search-item:hover {
                     <div id="assessmentsTable" class="assessments-table"><div class="loading">Loading assessments...</div></div>
                 </div>
                 <div id="myclassesPage" class="page-content"><div class="section-header"><h2>My Classes</h2></div><div id="myClassesTable" class="data-table"><div class="loading">Loading...</div></div></div>
-                <div id="activitiesPage" class="page-content"><div class="section-header"><h2>All Activities</h2></div><div id="teacherActivitiesTable" class="data-table"><div class="loading">Loading...</div></div></div>
+                <div id="activitiesPage" class="page-content">
+    <div class="section-header">
+        <h2>My Activities</h2>
+    </div>
+    <div id="teacherActivitiesList" class="activities-list">
+        <div class="loading">Loading activities...</div>
+    </div>
+</div>
                 <div id="reportsPage" class="page-content"><div class="section-header"><h2>Student Progress Reports</h2><button class="btn-primary" id="exportReportBtn">📊 Export Report</button></div><div id="reportsContainer" class="data-table"><div class="loading">Loading...</div></div></div>
                 <div id="messagesPage" class="page-content"><div class="section-header"><h2>Messages</h2><button class="btn-primary" id="newMessageBtn">+ New Chat</button></div><div id="messagesContainer" class="data-table"><div class="loading">Loading...</div></div></div>
                 <div id="settingsPage" class="page-content">
@@ -631,6 +638,51 @@ body.dark-mode .recipient-search-item:hover {
             `).join('');
         }
 
+
+        async function loadTeacherActivitiesPage() {
+    try {
+        const response = await fetch('/api/teacher/activities', {
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+        });
+        const activities = await response.json();
+
+        const container = document.getElementById('teacherActivitiesList');
+
+        if (!container) return;
+
+        if (activities.length === 0) {
+            container.innerHTML = '<p style="text-align:center;padding:40px;">No activities assigned to your classes yet.</p>';
+            return;
+        }
+
+        let html = '';
+        activities.forEach(activity => {
+            html += `
+                <div class="activity-item" onclick="window.location.href='/activities/${activity.id}'" style="cursor:pointer;">
+                    <div class="activity-info">
+                        <h4>${activity.title}</h4>
+                        <div class="activity-meta">
+                            <span>📚 ${activity.class_name || 'Class'}</span>
+                        </div>
+                    </div>
+                    <button class="btn-start">View Activity</button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Error loading activities:', error);
+        const container = document.getElementById('teacherActivitiesList');
+        if (container) {
+            container.innerHTML = '<p style="text-align:center;padding:40px;">Error loading activities.</p>';
+        }
+    }
+}
+
+
+// Call this when page loads
+//loadTeacherActivities();
         async function loadAssessments() {
             const container = document.getElementById('assessmentsTable');
             const data = await fetchAPI('/api/teacher/assessments');
@@ -1326,7 +1378,7 @@ async function updateTotalUnreadCount() {
                 if (pages[pageName]) pages[pageName].classList.add('active');
 
                 if (pageName === 'myclasses') await displayMyClasses();
-                if (pageName === 'activities') await displayTeacherActivities();
+                if (pageName === 'activities') await loadTeacherActivitiesPage();
                 if (pageName === 'reports') await displayReports();
                 if (pageName === 'messages') await displayMessages();
             });
@@ -1467,10 +1519,11 @@ function triggerBrowserSavePassword(newPassword) {
 
         // Initial load
         loadClasses();
-        loadTodayActivities();
+        //loadTodayActivities();
         loadAssessments();
         loadTeacherRecipients();
         updateTotalUnreadCount();
+        //document.addEventListener('DOMContentLoaded', function() {loadTeacherActivities();});
     </script>
 </body>
 </html>

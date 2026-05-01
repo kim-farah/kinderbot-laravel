@@ -490,6 +490,235 @@ body.dark-mode #passwordModal .form-input {
     border-color: #2a2a4a;
     color: white;
 }
+/* Activity Detail Card Styles */
+.activity-detail-card {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    border: 1px solid var(--border-gray);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.activity-detail-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Competency Table Styles */
+.competency-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.competency-table thead tr {
+    background: var(--light-gray);
+}
+
+.competency-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--dark-blue);
+    font-size: 14px;
+}
+
+.competency-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-gray);
+    vertical-align: middle;
+}
+
+.competency-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Row hover effect */
+.competency-table tbody tr {
+    transition: background 0.2s;
+}
+.competency-table tbody tr:hover {
+    background: #f5f5f5 !important;
+}
+
+/* Rated row */
+.competency-row-rated {
+    background: var(--white);
+}
+
+/* Pending row */
+.competency-row-pending {
+    background: #FFF8E7;
+}
+
+/* Competency name */
+.competency-name {
+    font-weight: 600;
+    color: var(--dark-blue);
+    font-size: 14px;
+}
+
+/* Rating stars */
+.rating-stars {
+    color: #FFB81C;
+    font-size: 16px;
+    letter-spacing: 2px;
+    white-space: nowrap;
+}
+
+.rating-stars-empty {
+    color: #ccc;
+    font-size: 16px;
+    letter-spacing: 2px;
+    white-space: nowrap;
+}
+
+.rating-number {
+    font-size: 13px;
+    margin-left: 8px;
+    color: var(--gray);
+}
+
+/* Teacher comment */
+.teacher-comment {
+    font-size: 13px;
+    color: var(--gray);
+    font-style: italic;
+}
+
+.comment-date {
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 4px;
+    display: block;
+}
+
+/* Status badges */
+.status-rated {
+    color: green;
+    font-weight: 500;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.status-pending {
+    color: var(--orange);
+    font-weight: 500;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Messages */
+.warning-message {
+    margin-top: 15px;
+    padding: 12px;
+    background: #FFF8E7;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--orange);
+    border-left: 3px solid var(--orange);
+}
+
+.success-message {
+    margin-top: 15px;
+    padding: 12px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    font-size: 13px;
+    color: green;
+    border-left: 3px solid green;
+}
+
+/* Activity header */
+.activity-header {
+    background: var(--dark-blue);
+    color: white;
+    padding: 16px 20px;
+}
+
+.activity-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.activity-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* Activity body */
+.activity-body {
+    padding: 20px;
+}
+
+.activity-objective {
+    margin-bottom: 16px;
+}
+
+.activity-objective strong,
+.activity-overview strong {
+    color: var(--dark-blue);
+}
+
+/* Dark mode support */
+body.dark-mode .activity-detail-card {
+    background: #16213e !important;
+    border-color: #2a2a4a;
+}
+
+body.dark-mode .competency-table thead tr {
+    background: #0f0f2a;
+}
+
+body.dark-mode .competency-table th {
+    color: var(--orange);
+}
+
+body.dark-mode .competency-row-rated {
+    background: #16213e;
+}
+
+body.dark-mode .competency-row-pending {
+    background: #2a2a3a;
+}
+
+body.dark-mode .competency-table tbody tr:hover {
+    background: #1f2a4a !important;
+}
+
+body.dark-mode .competency-name {
+    color: var(--orange);
+}
+
+body.dark-mode .teacher-comment {
+    color: #aaa;
+}
+
+body.dark-mode .warning-message {
+    background: #2a2a3a;
+    border-left-color: var(--orange);
+    color: #ffaa66;
+}
+
+body.dark-mode .success-message {
+    background: #1a3a1a;
+    border-left-color: green;
+    color: #88ff88;
+}
+
+body.dark-mode .activity-objective strong,
+body.dark-mode .activity-overview strong {
+    color: var(--orange);
+}
     </style>
 </head>
 <body>
@@ -547,21 +776,9 @@ body.dark-mode #passwordModal .form-input {
     <div class="stat-number" id="avgRating">0</div>
     <div class="stat-label">Average Rating</div>
 </div>
-<div class="stat-card">
-    <div class="stat-number" id="notesCount">0</div>
-    <div class="stat-label">Notes from Teacher</div>
-</div>
-                    </div>
-                    <div class="section-header">
-                        <h2>Recent Activities</h2>
-                    </div>
-                    <div id="activitiesTable" class="data-table"></div>
-                    <div class="section-header">
-                        <h2>Notes from Teacher</h2>
-                    </div>
-                    <div id="notesList" class="notes-list"></div>
-                </div>
 
+</div>
+</div>
                 <div id="mychildPage" class="page-content">
                     <div class="section-header"><h2>My Child's Profile</h2></div>
                     <div id="childProfileFull" class="data-table"></div>
@@ -685,37 +902,38 @@ body.dark-mode #passwordModal .form-input {
         }
     }
 
-    // Load child data and display dashboard
-    async function loadChildData() {
-        const children = await fetchAPI('/api/parent/children');
 
-        if (children.length === 0) {
-            document.getElementById('childName').innerHTML = 'No child linked';
-            document.getElementById('childClass').innerHTML = 'Please contact school';
-            return;
-        }
+   async function loadChildData() {
+    const children = await fetchAPI('/api/parent/children');
 
-        const child = children[0]; // First child (can support multiple later)
-        currentChildId = child.id;
-
-        // Update profile section
-        document.getElementById('childName').innerHTML = child.full_name;
-        document.getElementById('childClass').innerHTML = child.class || 'Not enrolled';
-
-        // Load progress
-        const progress = await fetchAPI(`/api/parent/child/${child.id}/progress`);
-        document.getElementById('progressPercent').innerHTML = `${progress.progress || 0}%`;
-        document.getElementById('progressFill').style.width = `${progress.progress || 0}%`;
-        document.getElementById('completedCount').innerHTML = progress.completedCount || 0;
-        document.getElementById('avgRating').innerHTML = progress.avgRating || 0;
-        document.getElementById('notesCount').innerHTML = progress.notesCount || 0;
-
-        // Load activities
-        await loadChildActivities(child.id);
-
-        // Load notes
-        await loadChildNotes(child.id);
+    if (children.length === 0) {
+        document.getElementById('childName').innerHTML = 'No child linked';
+        document.getElementById('childClass').innerHTML = 'Please contact school';
+        return;
     }
+
+    const child = children[0];
+    currentChildId = child.id;
+
+    // Update profile section
+    document.getElementById('childName').innerHTML = child.full_name;
+    document.getElementById('childClass').innerHTML = child.class || 'Not enrolled';
+
+    // Load progress
+    const progress = await fetchAPI(`/api/parent/child/${child.id}/progress`);
+    document.getElementById('progressPercent').innerHTML = `${progress.progress || 0}%`;
+    document.getElementById('progressFill').style.width = `${progress.progress || 0}%`;
+    document.getElementById('completedCount').innerHTML = progress.completedCount || 0;
+    document.getElementById('avgRating').innerHTML = progress.avgRating || 0;
+
+    // Remove notesCount reference - no longer exists
+
+    // Load activities
+    await loadChildActivities(child.id);
+
+    // Remove notes loading call
+    // await loadChildNotes(child.id);  // DELETE THIS LINE
+}
 
     async function loadChildActivities(childId) {
         const activities = await fetchAPI(`/api/parent/child/${childId}/activities`);
@@ -742,86 +960,160 @@ body.dark-mode #passwordModal .form-input {
         container.innerHTML = html;
     }
 
-    async function loadChildNotes(childId) {
-        const notes = await fetchAPI(`/api/parent/child/${childId}/notes`);
-        const container = document.getElementById('notesList');
-
-        if (notes.length === 0) {
-            container.innerHTML = '<p style="text-align: center; padding: 40px;">No notes from teacher yet.</p>';
-            return;
-        }
-
-        container.innerHTML = notes.map(n => `
-            <div class="note-card">
-                <div class="note-header">
-                    <span class="note-teacher">👩‍🏫 ${n.teacher}</span>
-                    <span class="note-date">${n.date}</span>
-                </div>
-                <div class="note-message">"${n.message}"</div>
-            </div>
-        `).join('');
-    }
-
     // ==================== MY CHILD PAGE ====================
 
-    async function displayChildProfileFull() {
-        const children = await fetchAPI('/api/parent/children');
-        if (children.length === 0) {
-            document.getElementById('childProfileFull').innerHTML = '<p style="text-align:center;padding:40px;">No child linked</p>';
-            return;
-        }
 
-        const child = children[0];
-        const progress = await fetchAPI(`/api/parent/child/${child.id}/progress`);
-
-        let html = '<table class="data-table"><tbody>';
-        html += `<tr><td style="width:150px"><strong>Name</strong></td><td>${child.full_name}</td></tr>`;
-        html += `<tr><td><strong>Date of Birth</strong></td><td>${child.date_of_birth || '-'}</td></tr>`;
-        html += `<tr><td><strong>Age</strong></td><td>${child.age || '-'} years</td></tr>`;
-        html += `<tr><td><strong>Class</strong></td><td>${child.class || 'Not enrolled'}</td></tr>`;
-        html += `<tr><td><strong>Teacher</strong></td><td>${child.teacher || 'Not assigned'}</td></tr>`;
-        html += `<tr><td><strong>Overall Progress</strong></td><td>${progress.progress || 0}% <div style="background:#e0e0e0;border-radius:10px;height:6px;margin-top:5px;"><div style="background:var(--orange);width:${progress.progress || 0}%;height:6px;border-radius:10px;"></div></div></td></tr>`;
-        html += `<tr><td><strong>Completed Activities</strong></td><td>${progress.completedCount || 0}</td></tr>`;
-        html += '</tbody></table>';
-        document.getElementById('childProfileFull').innerHTML = html;
+async function displayChildProfileFull() {
+    const children = await fetchAPI('/api/parent/children');
+    if (children.length === 0) {
+        document.getElementById('childProfileFull').innerHTML = '<p style="text-align:center;padding:40px;">No child linked</p>';
+        return;
     }
+
+    const child = children[0];
+    const progress = await fetchAPI(`/api/parent/child/${child.id}/progress`);
+
+    // 4-star display for overall average
+    const fullStars = Math.floor(progress.avgRating);
+    const emptyStars = 4 - fullStars;
+    const starDisplay = '★'.repeat(fullStars) + '☆'.repeat(emptyStars);
+
+    let html = '<table class="data-table"><tbody>';
+    html += `<tr><td style="width:150px"><strong>Name</strong></td><td>${escapeHtml(child.full_name)}</td></tr>`;
+    html += `<tr><td><strong>Date of Birth</strong></td><td>${child.date_of_birth || '-'}</td></tr>`;
+    html += `<tr><td><strong>Age</strong></td><td>${child.age || '-'} years</td></tr>`;
+    html += `<tr><td><strong>Class</strong></td><td>${escapeHtml(child.class || 'Not enrolled')}</td></tr>`;
+    html += `<tr><td><strong>Teacher</strong></td><td>${escapeHtml(child.teacher || 'Not assigned')}</td></tr>`;
+    html += `<tr><td><strong>Overall Progress</strong></td><td>${progress.progress || 0}% <div style="background:#e0e0e0;border-radius:10px;height:6px;margin-top:5px;"><div style="background:var(--orange);width:${progress.progress || 0}%;height:6px;border-radius:10px;"></div></div></td></tr>`;
+    html += `<tr><td><strong>Completed Activities</strong></td><td>${progress.completedCount || 0} / ${progress.totalActivities || 0}</td></tr>`;
+    html += `<tr><td><strong>Overall Average Rating</strong></td><td>${progress.avgRating || 0} / 4 <span style="color:#FFB81C; margin-left:10px; font-size:16px;">${starDisplay}</span><br><small style="color:var(--gray);">Average of all competency ratings across all activities</small></td></tr>`;
+    html += '</tbody></table>';
+    document.getElementById('childProfileFull').innerHTML = html;
+}
 
     // ==================== ALL ACTIVITIES PAGE ====================
 
-    async function displayAllActivities() {
-        if (!currentChildId) {
-            const children = await fetchAPI('/api/parent/children');
-            if (children.length > 0) currentChildId = children[0].id;
-        }
 
-        if (!currentChildId) {
-            document.getElementById('allActivitiesTable').innerHTML = '<p style="text-align:center;padding:40px;">No child linked</p>';
-            return;
-        }
-
-        const activities = await fetchAPI(`/api/parent/child/${currentChildId}/activities`);
-        const container = document.getElementById('allActivitiesTable');
-
-        if (activities.length === 0) {
-            container.innerHTML = '<p style="text-align: center; padding: 40px;">No activities yet.</p>';
-            return;
-        }
-
-        let html = '<table class="data-table"><thead><tr><th>Activity</th><th>Date</th><th>Status</th><th>Rating</th></tr></thead><tbody>';
-        activities.forEach(a => {
-            const statusClass = a.status === 'completed' ? 'status-completed' : 'status-progress';
-            const statusText = a.status === 'completed' ? '✅ Completed' : '🔄 In Progress';
-            const stars = '★'.repeat(a.rating) + '☆'.repeat(5 - a.rating);
-            html += `<tr>
-                <td><strong>${a.activity}</strong></td>
-                <td>${a.date}</td>
-                <td class="${statusClass}">${statusText}</td>
-                <td>${stars}</td>
-            </tr>`;
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
+async function displayAllActivities() {
+    if (!currentChildId) {
+        const children = await fetchAPI('/api/parent/children');
+        if (children.length > 0) currentChildId = children[0].id;
     }
+
+    if (!currentChildId) {
+        document.getElementById('allActivitiesTable').innerHTML = '<p style="text-align:center;padding:40px;">No child linked</p>';
+        return;
+    }
+
+    const activities = await fetchAPI(`/api/parent/child/${currentChildId}/activities-with-ratings`);
+    const container = document.getElementById('allActivitiesTable');
+
+    if (activities.length === 0) {
+        container.innerHTML = '<p style="text-align:center;padding:40px;">No completed activities yet.</p>';
+        return;
+    }
+
+    let html = '';
+    for (const activity of activities) {
+        const fullStars = Math.floor(activity.avg_rating);
+        const emptyStars = 4 - fullStars;
+        const starDisplay = '★'.repeat(fullStars) + '☆'.repeat(emptyStars);
+
+        html += `
+            <div class="activity-detail-card">
+                <div class="activity-header">
+                    <h3 class="activity-title">${escapeHtml(activity.title)}</h3>
+                    <div class="activity-meta">
+                        <span>📅 Completed: ${activity.completion_date}</span>
+                        <span>⭐ Activity Average: ${activity.avg_rating} / 4 ${starDisplay}</span>
+                        <span>📊 ${activity.rated_competencies}/${activity.total_competencies} competencies rated</span>
+                    </div>
+                </div>
+                <div class="activity-body">
+                    <div class="activity-objective">
+                        <strong>📖 Objective:</strong> ${escapeHtml(activity.objective || 'Not specified')}
+                    </div>
+                    <div class="activity-overview">
+                        <strong>📝 Overview:</strong> ${escapeHtml(activity.overview || 'Not specified')}
+                    </div>
+
+                    <h4 style="color:var(--dark-blue); margin:20px 0 15px 0;">🎯 Competencies & Ratings</h4>
+                    <table class="competency-table">
+                        <thead>
+                            <tr>
+                                <th style="width:30%">Competency</th>
+                                <th style="width:25%; text-align:center;">Rating</th>
+                                <th style="width:30%">Teacher's Comment</th>
+                                <th style="width:15%; text-align:center;">Status</th>
+                            </thead>
+                            <tbody>
+        `;
+
+        for (const comp of activity.competencies) {
+            const hasRating = comp.rating !== null;
+
+            if (hasRating) {
+                const fullStarsRating = Math.floor(comp.rating);
+                const emptyStarsRating = 4 - fullStarsRating;
+                const ratingStars = '★'.repeat(fullStarsRating) + '☆'.repeat(emptyStarsRating);
+                const comment = comp.comment || 'No comment provided';
+                const assessedDate = comp.assessed_at ? new Date(comp.assessed_at).toLocaleDateString() : '';
+
+                html += `
+                    <tr class="competency-row-rated">
+                        <td class="competency-name">${escapeHtml(comp.competency_name || 'Not specified')}</td>
+                        <td style="text-align:center;">
+                            <span class="rating-stars">${ratingStars}</span>
+                            <span class="rating-number">(${comp.rating}/4)</span>
+                        </td>
+                        <td>
+                            <div class="teacher-comment">"${escapeHtml(comment)}"</div>
+                            ${assessedDate ? `<div class="comment-date">📅 ${assessedDate}</div>` : ''}
+                        </td>
+                        <td style="text-align:center;">
+                            <span class="status-rated">✅ Rated</span>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                html += `
+                    <tr class="competency-row-pending">
+                        <td class="competency-name">${escapeHtml(comp.competency_name || 'Not specified')}</td>
+                        <td style="text-align:center;">
+                            <span class="rating-stars-empty">☆☆☆☆</span>
+                            <span class="rating-number">(Not rated)</span>
+                        </td>
+                        <td><span class="teacher-comment">—</span></td>
+                        <td style="text-align:center;">
+                            <span class="status-pending">⏳ Pending</span>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        html += `
+                            </tbody>
+                        </table>
+                        ${activity.rated_competencies < activity.total_competencies ?
+                            '<div class="warning-message">⚠️ Some competencies have not been rated yet. The activity average only includes rated competencies.</div>' :
+                            '<div class="success-message">✅ All competencies have been rated for this activity!</div>'}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = html;
+}
+
+// Add escapeHtml function if not present
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
     // ==================== MESSAGES ====================
 async function displayMessages() {
