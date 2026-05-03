@@ -35,7 +35,7 @@ class ParentController extends Controller
         $children = DB::table('parent_student')
             ->join('students', 'parent_student.student_id', '=', 'students.id')
             ->where('parent_student.parent_id', $parent->id)
-            ->select('students.id', 'students.full_name', 'students.date_of_birth')
+            ->select(['students.id', 'students.full_name', 'students.date_of_birth'])
             ->get();
 
         foreach ($children as $child) {
@@ -61,100 +61,185 @@ class ParentController extends Controller
         return response()->json($children);
     }
 
-    // API: Get child's activities
-    public function getChildActivities($childId)
-    {
-        $completions = DB::table('activity_completions')
-            ->where('student_id', $childId)
-            ->orderBy('completion_date', 'desc')
-            ->get();
 
-        $activities = [];
-        foreach ($completions as $completion) {
-            $activity = DB::table('activities')->where('id', $completion->activity_id)->first();
-            if ($activity) {
-                $activities[] = [
-                    'id' => $completion->id,
-                    'activity' => $activity->title,
-                    'date' => date('M d, Y', strtotime($completion->completion_date)),
-                    'status' => $completion->status,
-                    'rating' => $this->getRatingFromStatus($completion->status)
-                ];
-            }
-        }
+      public function getChildActivities(int $childId)
+{
+    // Get the child's class_id
+    $enrollment = DB::table('enrollments')
+        ->where('student_id', $childId)
+        ->where('status', 'active')
+        ->first();
 
-        return response()->json($activities);
+    if (!$enrollment) {
+        return response()->json([]);
     }
 
-    // API: Get child's progress
-    public function getChildProgress($childId)
-    {
-        $totalActivities = DB::table('activities')->count();
-        $completedActivities = DB::table('activity_completions')
-            ->where('student_id', $childId)
-            ->where('status', 'completed')
-            ->count();
+    $section = DB::table('sections')->where('id', $enrollment->section_id)->first();
+    $classId = $section->class_id;
 
-        $progress = $totalActivities > 0 ? round(($completedActivities / $totalActivities) * 100) : 0;
+    // Get activities for THIS SPECIFIC CLASS only
+    $activities = DB::table('activities')
+        ->where('class_id', $classId)
+        ->get();
 
-        $completions = DB::table('activity_completions')
-            ->where('student_id', $childId)
-            ->get();
+    // Get completions for this child
+    $completions = DB::table('activity_completions')
+        ->where('student_id', $childId)
+        ->get()
+        ->keyBy('activity_id');
 
-        $totalRating = 0;
-        foreach ($completions as $completion) {
-            if ($completion->status == 'completed') {
-                $totalRating += 4;
-            } elseif ($completion->status == 'in_progress') {
-                $totalRating += 2;
-            }
+    $result = [];
+    foreach ($activities as $activity) {
+        $completion = $completions->get($activity->id);
+        $status = 'Not Started';
+        $completionDate = null;
+
+        if ($completion) {
+            $statusObj = DB::table('activity_completion_statuses')
+                ->where('id', $completion->activity_completion_status_id)
+                ->first();
+            $status = $statusObj ? $statusObj->description : 'Unknown';
+            $completionDate = $completion->completion_date;
         }
 
-        $avgRating = $completions->count() > 0 ? $totalRating / $completions->count() : 0;
+        $result[] = [
+            'id' => $activity->id,
+            'activity' => $activity->title,
+            'date' => $completionDate ? date('M d, Y', strtotime($completionDate)) : '-',
+            'status' => strtolower($status),
+            'rating' => 0
+        ];
+    }
 
-        $notesCount = DB::table('notes')
-            ->where('student_id', $childId)
-            ->count();
+    return response()->json($result);
+}
 
+public function getChildProgress(int $childId)
+{
+    // Get the child's class_id from enrollment
+    $enrollment = DB::table('enrollments')
+        ->where('student_id', $childId)
+        ->where('status', 'active')
+        ->first();
+
+    if (!$enrollment) {
         return response()->json([
-            'progress' => $progress,
-            'completedCount' => $completedActivities,
-            'avgRating' => round($avgRating, 1),
-            'notesCount' => $notesCount
+            'progress' => 0,
+            'completedCount' => 0,
+            'avgRating' => 0,
+            'totalActivities' => 0
         ]);
     }
 
-    // API: Get notes for child
-    public function getChildNotes($childId)
-    {
-        $notes = DB::table('notes')
-            ->where('student_id', $childId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+    $section = DB::table('sections')->where('id', $enrollment->section_id)->first();
+    $classId = $section->class_id;
 
-        $result = [];
-        foreach ($notes as $note) {
-            $teacher = DB::table('teachers')->where('id', $note->created_by)->first();
-            $result[] = [
-                'id' => $note->id,
-                'teacher' => $teacher ? $teacher->full_name : 'Teacher',
-                'date' => date('M d, Y', strtotime($note->created_at)),
-                'message' => $note->content
-            ];
-        }
+    // Get total activities for THIS SPECIFIC CLASS only
+    $totalActivities = DB::table('activities')
+        ->where('class_id', $classId)
+        ->count();
 
-        return response()->json($result);
+    // Get completed activities for this child
+    $completedActivities = DB::table('activity_completions')
+        ->where('student_id', $childId)
+        ->where('activity_completion_status_id', 2)
+        ->count();
+
+    // Calculate progress percentage
+    $progress = $totalActivities > 0 ? round(($completedActivities / $totalActivities) * 100) : 0;
+
+    // Get average rating from assessments
+    $avgRating = DB::table('assessments')
+        ->where('student_id', $childId)
+        ->avg('rating');
+
+    $avgRating = $avgRating ? round($avgRating, 1) : 0;
+
+    return response()->json([
+        'progress' => $progress,
+        'completedCount' => $completedActivities,
+        'avgRating' => $avgRating,
+        'totalActivities' => $totalActivities
+    ]);
+}
+
+
+public function getChildActivitiesWithRatings(int $childId)
+{
+    // Get the child's class_id
+    $enrollment = DB::table('enrollments')
+        ->where('student_id', $childId)
+        ->where('status', 'active')
+        ->first();
+
+    if (!$enrollment) {
+        return response()->json([]);
     }
 
+    $section = DB::table('sections')->where('id', $enrollment->section_id)->first();
+    $classId = $section->class_id;
+
+    // Get completed activities for THIS SPECIFIC CLASS only
+    $completions = DB::table('activity_completions')
+        ->where('student_id', $childId)
+        ->where('activity_completion_status_id', 2)
+        ->get();
+
+    $activities = [];
+    foreach ($completions as $completion) {
+        $activity = DB::table('activities')
+            ->where('id', $completion->activity_id)
+            ->where('class_id', $classId)  // ← Only activities from child's class
+            ->first();
+
+        if ($activity) {
+            // Get competencies with ratings (same as before)
+            $competencies = DB::table('competencies')
+                ->leftJoin('assessments', function($join) use ($childId) {
+                    $join->on('competencies.id', '=', 'assessments.competency_id')
+                         ->where('assessments.student_id', '=', $childId);
+                })
+                ->where('competencies.activity_id', $activity->id)
+                ->select(['competencies.id', 'competencies.description as competency_name', 'assessments.rating', 'assessments.comment', 'assessments.created_at as assessed_at'])
+                ->get();
+
+            $totalRating = 0;
+            $ratedCount = 0;
+            foreach ($competencies as $comp) {
+                if ($comp->rating !== null) {
+                    $totalRating += $comp->rating;
+                    $ratedCount++;
+                }
+            }
+            $avgRating = $ratedCount > 0 ? round($totalRating / $ratedCount, 1) : 0;
+
+            $activities[] = [
+                'id' => $activity->id,
+                'title' => $activity->title,
+                'objective' => $activity->objective,
+                'overview' => $activity->overview,
+                'completion_date' => $completion->completion_date ? date('M d, Y', strtotime($completion->completion_date)) : 'N/A',
+                'avg_rating' => $avgRating,
+                'competencies' => $competencies,
+                'total_competencies' => $competencies->count(),
+                'rated_competencies' => $ratedCount
+            ];
+        }
+    }
+
+    return response()->json($activities);
+}
+
+
     // Helper methods
-    private function getTeacherName($teacherId)
+    private function getTeacherName(int $teacherId)
     {
         if (!$teacherId) return 'Not assigned';
         $teacher = DB::table('teachers')->where('id', $teacherId)->first();
         return $teacher ? $teacher->full_name : 'Not assigned';
     }
 
-    private function getRatingFromStatus($status)
+    private function getRatingFromStatus(mixed $status)
     {
         switch ($status) {
             case 'completed': return 4;
@@ -307,7 +392,7 @@ class ParentController extends Controller
 }
 
     // Helper for parent controller
-    private function getUserInfo($userId, $type)
+    private function getUserInfo(int $userId,string $type)
     {
         $user = DB::table('users')->where('id', $userId)->first();
         $name = $user->email;
@@ -326,7 +411,7 @@ class ParentController extends Controller
     }
 
     // API: Mark message as read
-    public function markAsRead($id)
+    public function markAsRead(int $id)
     {
         try {
             DB::table('messages')->where('id', $id)->update([
@@ -340,7 +425,7 @@ class ParentController extends Controller
     }
 
     // API: Get full conversation between parent and a specific participant (teacher or coordinator)
-public function getConversation($participantId)
+public function getConversation(int $participantId)
 {
     $userId = Auth::id();
     $parent = DB::table('parents')->where('user_id', $userId)->first();
@@ -439,7 +524,7 @@ public function getConversation($participantId)
     }
 
 // Soft delete message
-public function deleteMessage($id)
+public function deleteMessage(int $id)
 {
     try {
         $userId = Auth::id();
@@ -468,7 +553,7 @@ public function deleteMessage($id)
     }
 }
 
-public function markMessagesAsRead($senderId)
+public function markMessagesAsRead(int $senderId)
 {
     $userId = Auth::id();
 

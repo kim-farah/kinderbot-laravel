@@ -58,7 +58,7 @@ class TeacherController extends Controller
             // Get next activity (first published activity for this class)
             $nextActivity = DB::table('activities')
                 ->where('class_id', $section->class_id)
-                ->where('is_published', true)
+                //->where('is_published', true)
                 ->first();
 
             $classes[] = [
@@ -115,6 +115,7 @@ class TeacherController extends Controller
         return response()->json($todayActivities);
     }
 
+
     // API: Get all activities for teacher
     public function getAllActivities()
     {
@@ -154,17 +155,48 @@ class TeacherController extends Controller
     }
 
     // API: Get students in a specific section
-    private function getStudentsInSection($sectionId)
+    private function getStudentsInSection(int $sectionId)
     {
         $students = DB::table('enrollments')
             ->join('students', 'enrollments.student_id', '=', 'students.id')
             ->where('enrollments.section_id', $sectionId)
             ->where('enrollments.status', 'active')
-            ->select('students.id', 'students.full_name')
+            ->select(['students.id', 'students.full_name'])
             ->get();
 
         return $students->pluck('full_name')->toArray();
     }
+
+    public function getMyActivities()
+{
+    $userId = Auth::id();
+    $teacher = DB::table('teachers')->where('user_id', $userId)->first();
+
+    if (!$teacher) {
+        return response()->json([]);
+    }
+
+    // Get class_ids from sections assigned to this teacher
+    $classIds = DB::table('sections')
+        ->where('teacher_id', $teacher->id)
+        ->pluck('class_id')
+        ->toArray();
+
+    if (empty($classIds)) {
+        return response()->json([]);
+    }
+
+    // Get activities for those classes WITH the class name
+    $activities = DB::table('activities')
+        ->join('classes', 'activities.class_id', '=', 'classes.id')
+        ->select(['activities.*', 'classes.name as class_name'])
+        ->whereIn('activities.class_id', $classIds)
+        ->where('activities.is_published', true)
+        ->orderBy('activities.created_at', 'desc')
+        ->get();
+
+    return response()->json($activities);
+}
 
     // API: Get assessments for teacher's students
     public function getAssessments()
@@ -259,7 +291,7 @@ class TeacherController extends Controller
             ->join('students', 'enrollments.student_id', '=', 'students.id')
             ->whereIn('enrollments.section_id', $sectionIds)
             ->where('enrollments.status', 'active')
-            ->select('students.id', 'students.full_name')
+            ->select(['students.id', 'students.full_name'])
             ->get();
 
         return response()->json($students);
@@ -283,7 +315,7 @@ class TeacherController extends Controller
         $activities = DB::table('activities')
             ->whereIn('class_id', $classIds)
             ->where('is_published', true)
-            ->select('id', 'title')
+            ->select(['id', 'title'])
             ->get();
 
         return response()->json($activities);
@@ -486,7 +518,7 @@ public function sendMessage(Request $request)
 }
 
 // Helper: Get user info by ID and type
-private function getUserInfo($userId, $type)
+private function getUserInfo(int $userId, string $type)
 {
     $user = DB::table('users')->where('id', $userId)->first();
     $name = $user->email;
@@ -505,7 +537,7 @@ private function getUserInfo($userId, $type)
 }
 
 // API: Mark message as read
-public function markAsRead($id)
+public function markAsRead(int $id)
 {
     try {
         DB::table('messages')->where('id', $id)->update([
@@ -518,7 +550,7 @@ public function markAsRead($id)
     }
 }
 // API: Get full conversation between teacher and a specific participant (parent or coordinator)
-public function getConversation($participantId)
+public function getConversation(int $participantId)
 {
     $userId = Auth::id();
     $teacher = DB::table('teachers')->where('user_id', $userId)->first();
@@ -616,7 +648,7 @@ public function replyToMessage(Request $request)
     }
 }
 
-public function markMessagesAsRead($senderId)
+public function markMessagesAsRead(int $senderId)
 {
     $userId = Auth::id();
 
@@ -629,7 +661,7 @@ public function markMessagesAsRead($senderId)
     return response()->json(['success' => true]);
 }
 
-public function deleteMessage($id)
+public function deleteMessage(int $id)
 {
     try {
         $userId = Auth::id();

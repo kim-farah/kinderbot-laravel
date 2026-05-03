@@ -32,13 +32,13 @@ class ClassController extends Controller
         return response()->json($classes);
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $class = DB::table('classes')->where('id', $id)->first();
         return response()->json($class);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         try {
             DB::table('classes')->where('id', $id)->update([
@@ -52,7 +52,7 @@ class ClassController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function destroy(int $id)
     {
         try {
             DB::table('classes')->where('id', $id)->delete();

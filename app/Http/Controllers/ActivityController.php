@@ -8,46 +8,113 @@ use App\Models\Activity;
 
 class ActivityController extends Controller
 {
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string',
-            'class' => 'required|string',
-            'overview' => 'required|string',
-            'skills' => 'required|string',
-            'materials' => 'required|string',
-            'instructions' => 'required|string',
-            'duration' => 'required|integer',
-            'difficulty' => 'required|string',
-            'publish' => 'sometimes|boolean',
-        ]);
 
-        // Get class_id from class name
-        $class = DB::table('classes')->where('name', $request->class)->first();
+public function store(Request $request)
+{
 
-        DB::table('activities')->insert([
-            'title' => strtoupper($request->title),
-            'class_id' => $class->id ?? 1,
-            'objective' => $request->overview,
-            'materials_needed' => $request->materials,
-            'instructions' => $request->instructions,
-            'estimated_duration' => $request->duration,
-            'difficulty_level' => strtolower($request->difficulty),
-            'is_published' => $request->has('publish'),
-            'created_by' => session('user_id'),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+    $request->validate([
+        'title' => 'required|string',
+        'class' => 'required|string',
+        'objective' => 'required|string',
+        'overview' => 'required|string',
+        'skills' => 'required|string',
+        'materials' => 'required|string',
+        //'instructions' => 'required|string',
+        'step_description' => 'required|array',
+        'step_description.*' => 'required|string',
+    ]);
 
-        return redirect()->route('coordinator')->with('success', 'Activity created successfully!');
+    // Get class_id
+    $class = DB::table('classes')->where('name', $request->class)->first();
+    if (!$class) {
+        return back()->withErrors(['class' => 'Class not found']);
     }
 
+    // Insert into activities table
+    $activityId = DB::table('activities')->insertGetId([
+        'title' => $request->title,
+        'class_id' => $class->id,
+        'objective' => $request->objective,
+        'overview' => $request->overview,
+        'skills_competencies' => $request->skills,
+        'materials' => $request->materials,
+        //'description' => $request->instructions,
+        'rodin_comment' => $request->rodin_comment,
+        'activity_comment' => $request->activity_comment,
+        'feedback_comment' => $request->feedback_comment,
+        'is_published' => $request->has('is_published'),
+        'created_at' => now(),
+        //'updated_at' => now(),
+    ]);
+
+    // Save Resources (Images)
+    $resourceTitles = [
+        'Hero Image','Switch Image 1', 'Switch Image 2'];
+
+    if ($request->hasFile('resources')) {
+        foreach ($request->file('resources') as $index => $file) {
+            if ($file && $file->isValid()) {
+                $filename = time() . '_' . $index . '_' . $file->getClientOriginalName();
+                $file->storeAs('public/activities', $filename);
+
+                DB::table('resources')->insert([
+                    'activity_id' => $activityId,
+                    'title' => $resourceTitles[$index] ?? 'Resource ' . ($index + 1),
+                    'file_path' => 'activities/' . $filename,
+                    'created_at' => now(),
+                    //'updated_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    // Save Steps
+    $stepDescriptions = $request->step_description;
+    $stepImages = $request->file('step_images') ?? [];
+
+    foreach ($stepDescriptions as $index => $description) {
+        if (!empty(trim($description))) {
+        $imagePath = null;
+
+        if (isset($stepImages[$index]) && $stepImages[$index]->isValid()) {
+            $filename = time() . '_step_' . $index . '_' . $stepImages[$index]->getClientOriginalName();
+            $stepImages[$index]->storeAs('public/activities', $filename);
+            $imagePath = 'activities/' . $filename;
+        }
+
+        DB::table('activity_steps')->insert([
+            'activity_id' => $activityId,
+            'description' => $description,
+            'image_path' => $imagePath,
+            'order' => $index + 1,
+            'created_at' => now(),
+            //'updated_at' => now(),
+        ]);
+    }}
+
+// Save Competencies - FIX HERE
+    $skillNames = explode("\n", $request->skills);
+    foreach ($skillNames as $index => $skillName) {
+        $skillName = trim($skillName);
+        if (!empty($skillName)) {
+            DB::table('competencies')->insert([
+                'activity_id' => $activityId,
+                'name' => 'skill_' . ($index + 1),
+                'description' => ($skillName)
+            ]);
+        }
+    }
+
+    return redirect()->route('coordinator')->with('success', 'Activity created successfully!');
+
+}
     // ADD THIS METHOD
     public function index()
     {
         $activities = DB::table('activities')
             ->join('classes', 'activities.class_id', '=', 'classes.id')
-            ->select('activities.*', 'classes.name as class_name')
+            ->select('activities.*')
+            ->addSelect('classes.name as class_name')
             ->orderBy('activities.created_at', 'desc')
             ->get();
 
@@ -65,7 +132,45 @@ class ActivityController extends Controller
             return view('activities.show', compact('activity'));
         }
 
-    public function byClass($classId)
+    // Get resources (images)
+ /*   $resources = DB::table('resources')->where('activity_id', $id)->get();
+
+    // Get steps
+    $steps = DB::table('activity_steps')->where('activity_id', $id)->orderBy('order')->get();
+
+    // Get competencies (skills)
+    $competencies = DB::table('competencies')->where('activity_id', $id)->get();
+
+    return view('activities.show', compact('activity', 'resources', 'steps', 'competencies'));
+}
+*/
+//new
+public function getActivityData(int $id)
+{
+    $activity = DB::table('activities')->where('id', $id)->first();
+
+    if (!$activity) {
+        return response()->json(['error' => 'Activity not found'], 404);
+    }
+
+    $resources = DB::table('resources')->where('activity_id', $id)->get();
+    $steps = DB::table('activity_steps')->where('activity_id', $id)->orderBy('order')->get();
+
+    return response()->json([
+        'id' => $activity->id,
+        'title' => $activity->title,
+        'objective' => $activity->objective,
+        'overview' => $activity->overview,
+        'skills_competencies' => $activity->skills_competencies,
+        'materials' => $activity->materials,
+        'rodin_comment' => $activity->rodin_comment,
+        'activity_comment' => $activity->activity_comment,
+        'feedback_comment' => $activity->feedback_comment,
+        'resources' => $resources,
+        'steps' => $steps
+    ]);
+}
+    public function byClass(int $classId)
     {
         return Activity::where('class_id', $classId)->get();
     }
@@ -80,10 +185,10 @@ class ActivityController extends Controller
     );
 }
 
-public function getActivityData($id)
+/*public function getActivityData($id)
 {
     return response()->json(
         Activity::with(['resources','steps','animations'])->findOrFail($id)
     );
-}
+}*/
 }
