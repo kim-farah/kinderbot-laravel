@@ -602,11 +602,12 @@ body.dark-mode .recipient-search-item:hover {
             }
 
             container.innerHTML = data.map(cls => `
-                <div class="class-card" onclick="viewClassDetails(${JSON.stringify(cls).replace(/"/g, '&quot;')})">
+                <div class="class-card" >
                     <h3>${cls.name}</h3>
                     <div class="class-stats"><p>👥 ${cls.students} students</p><p>🕒 ${cls.time || 'Schedule TBD'}</p></div>
                     <div class="next-activity">Next: ${cls.nextActivity || 'No activities'}</div>
                     <button class="btn-view" onclick="event.stopPropagation(); viewClassDetails(${JSON.stringify(cls).replace(/"/g, '&quot;')})">View Class</button>
+                    <button class="btn-view" onclick="goToActivities(${cls.id})"> Activities </button>
                 </div>
             `).join('');
         }
@@ -647,13 +648,19 @@ body.dark-mode .recipient-search-item:hover {
                     <td>${a.activity}</td>
                     <td class="rating">${'★'.repeat(a.rating)}${'☆'.repeat(5-a.rating)}</td>
                     <td>${a.date}</td>
-                    <td><button class="btn-edit" onclick="editAssessment(${a.id})">Edit</button></td>
+                    <td>
+                       <button class="btn-edit" onclick="editAssessment(${a.id})">Edit</button>
+                    </td>
                 </tr>`;
             });
             html += '</tbody></table>';
             container.innerHTML = html;
         }
 
+        function goToActivities(sectionId){
+            window.location.href =
+            `/activities?section=${sectionId}`;
+        }
         // ==================== PAGE LOADERS ====================
 
         async function displayMyClasses() {

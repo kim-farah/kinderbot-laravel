@@ -7,7 +7,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ParentController;
-
+use App\Http\Controllers\AssessmentController;
 
 Route::middleware(['web'])->group(function () {
 // Login routes
@@ -164,7 +164,7 @@ Route::get('/api/unread-count', [CoordinatorController::class, 'getUnreadCount']
 Route::get('/api/teacher/unread-count', [TeacherController::class, 'getUnreadCount']);
 Route::get('/api/parent/unread-count', [ParentController::class, 'getUnreadCount']);
 
-});
+
 
 Route::get('/activities/{id}', [ActivityController::class, 'show'])
     ->name('activities.show');
@@ -176,8 +176,36 @@ Route::get('/activities/{activity}/sections/{section}/assessment',
  [AssessmentController::class,'show'])
  ->name('activities.assessment');
 
- Route::get('/activities/{id}/assessment', [AssessmentController::class,'index']);
+ //Route::get('/activities/{id}/assessment', [AssessmentController::class,'index']);
 
  Route::get('/api/activities/{id}/assessment', [AssessmentController::class,'getData']);
 
  Route::post('/api/assessment/submit', [AssessmentController::class,'submit']);
+
+/* Route::get(
+'/teacher/sections/{section}/activities',
+[ActivityController::class,'getSectionActivities']
+);*/
+
+Route::get('/activities', function () {
+   return view('activities.index');
+});
+
+Route::get('/api/teacher/sections/{section}/activities',
+[ActivityController::class,'getSectionActivities']);
+
+
+Route::get('/api/activities/{id}', [ActivityController::class, 'getActivityData']);
+
+ /*Route::get('/activities/{activity}/sections/{section}/assessment',
+ [AssessmentController::class,'show'])
+ ->name('activities.assessment');*/
+
+
+ Route::get('/api/assessment/{activity}/{section}',
+    [AssessmentController::class, 'getAssessmentData']);
+
+    Route::get('/api/assessment/{activity}/{section}', [AssessmentController::class, 'getData']);
+
+Route::post('/api/assessment/submit', [AssessmentController::class, 'submit']);
+});

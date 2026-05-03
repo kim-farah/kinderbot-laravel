@@ -2,55 +2,104 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Activity;
 
 class AssessmentController extends Controller
 {
     private function getStudentsInSection($sectionId)
-{
-    return DB::table('enrollments')
-        ->join('students', 'enrollments.student_id', '=', 'students.id')
-        ->where('enrollments.section_id', $sectionId)
-        ->where('enrollments.status', 'active')
-        ->select('students.id', 'students.full_name')
-        ->get();
-}
-
-public function submit(Request $request)
-{
-    $activityId = $request->activity_id;
-
-    /* SAVE COMPETENCY SCORES */
-    foreach($request->assessments as $a){
-
-        DB::table('assessment')->updateOrInsert(
-            [
-                'student_id' => $a['student_id'],
-                'activity_id' => $activityId,
-                'competency_id' => $a['competency_id'],
-            ],
-            [
-                'score' => $a['score']
-            ]
-        );
-
+    {
+        return DB::table('enrollments')
+            ->join('students', 'enrollments.student_id', '=', 'students.id')
+            ->where('enrollments.section_id', $sectionId)
+            ->where('enrollments.status', 'active')
+            ->select('students.id', 'students.full_name')
+            ->get();
     }
 
-    /* SAVE COMPLETION */
-    foreach($request->completions as $c){
+    // =========================
+    // GET DATA FOR FRONTEND
+    // =========================
+    public function getData($activityId, $sectionId)
+    {
+        $students = DB::table('enrollments')
+            ->join('students', 'enrollments.student_id', '=', 'students.id')
+            ->where('enrollments.section_id', $sectionId)
+            ->where('enrollments.status', 'active')
+            ->select('students.id', 'students.full_name')
+            ->get();
 
-        DB::table('activity_completion')->updateOrInsert(
-            [
-                'student_id' => $c['student_id'],
-                'activity_id' => $activityId,
-            ],
-            [
-                'completed' => $c['completed']
-            ]
-        );
+        $competencies = DB::table('competencies')
+            ->where('activity_id', $activityId)
+            ->select('id', 'name')
+            ->get();
 
+        return response()->json([
+            'students' => $students,
+            'competencies' => $competencies
+        ]);
     }
 
-    return response()->json(['status' => 'success']);
-}
+    // =========================
+    // SUBMIT ASSESSMENT
+    // =========================
+    public function submit(Request $request)
+    {
+        $teacherId = DB::table('teachers')
+        ->where('user_id', auth()->id())
+        ->value('id');
+        $ratings = $request->ratings;
+        $completions = $request->completions;
+
+        // RATINGS
+        foreach ($ratings as $studentId => $comps) {
+            foreach ($comps as $competencyId => $rating) {
+
+                DB::table('assessments')->updateOrInsert(
+                    [
+                        'student_id' => $studentId,
+                        'competency_id' => $competencyId,
+                    ],
+                    [
+                        'teacher_id' => $teacherId,
+                        'rating' => $rating,
+                        'comment' => $data['comment'] ?? null,
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]
+                );
+            }
+        }
+
+        // COMPLETION + COMMENT
+        foreach ($completions as $studentId => $data) {
+
+            DB::table('activity_completions')->updateOrInsert(
+                [
+                    'student_id' => $studentId,
+                    'activity_id' => $data['activity_id'],
+                ],
+                [
+                    'activity_completion_status_id' => $data['completed'] ? 2 : 1,
+                    'completion_date' => now(),
+                   
+                ]
+            );
+        }
+
+        return response()->json([
+            'message' => 'Assessment saved successfully'
+        ]);
+    }
+
+    // OPTIONAL (Blade view if needed)
+    public function show($activityId, $sectionId)
+    {
+        $activity = Activity::with(['competencies'])->findOrFail($activityId);
+
+        $students = $this->getStudentsInSection($sectionId);
+
+        return view('assessments.show', compact('activity', 'students', 'sectionId'));
+    }
 }

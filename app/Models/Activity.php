@@ -13,9 +13,9 @@ class Activity extends Model
     'materials',
     'overview',
     'skill_competencies',
-    'rodinComment',
-    'activityComment',
-    'feedbackComment',
+    'rodin_comment',
+    'activity_comment',
+    'feedback_comment',
     'is_published',
     ];
 
@@ -42,10 +42,7 @@ class Activity extends Model
 
     public function competencies()
     {
-        return $this->belongsToMany(
-        Competency::class,
-        'activity_competency'
-    );
+        return $this->hasMany(Competency::class);
     }
 
     public function animations()

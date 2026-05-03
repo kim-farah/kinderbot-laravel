@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Activity;
 
 class ActivityController extends Controller
 {
@@ -53,17 +54,36 @@ class ActivityController extends Controller
         return response()->json($activities);
     }
 
-    public function show($id)
-    {
-        return Activity::with([
-            'resources',
-            'steps',
-            'animations'
-        ])->findOrFail($id);
-    }
+   public function show($id)
+        {
+            $activity = Activity::with([
+                'resources',
+                'steps',
+                'animations'
+            ])->findOrFail($id);
+
+            return view('activities.show', compact('activity'));
+        }
 
     public function byClass($classId)
     {
         return Activity::where('class_id', $classId)->get();
     }
+
+       public function getSectionActivities($sectionId)
+{
+    return response()->json(
+        DB::table('activities')
+            ->where('class_id', $sectionId)
+            //->where('is_published', true)
+            ->get()
+    );
+}
+
+public function getActivityData($id)
+{
+    return response()->json(
+        Activity::with(['resources','steps','animations'])->findOrFail($id)
+    );
+}
 }
