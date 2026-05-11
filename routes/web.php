@@ -159,14 +159,14 @@ Route::get('/activities/{id}', [ActivityController::class, 'show'])->name('activ
 
 
 //new
-Route::get('/api/activities/{id}/data', [ActivityController::class, 'getActivityData']);
+Route::get('/api/activities/{id}/data', [ActivityController::class, 'getActivityData1']);
 
 
 Route::get('/activities/{id}/edit', [ActivityController::class, 'edit'])->name('activities.edit');
 Route::put('/activities/{id}', [ActivityController::class, 'update'])->name('activities.update');
 
 
-    Route::get('/api/classes/{classId}/activities', [ActivityController::class, 'byClass']);
+Route::get('/api/classes/{classId}/activities', [ActivityController::class, 'byClass']);
 
 Route::get('/activities/{activity}/sections/{section}/assessment',
  [AssessmentController::class,'show'])
@@ -188,8 +188,10 @@ Route::get('/activities', function () {
 });
 
 Route::get('/api/teacher/sections/{section}/activities',
-[ActivityController::class,'getSectionActivities']);
+[TeacherController::class,'getSectionActivities']);
 
+Route::get('/api/teacher/sections/{section}/activities',
+[ActivityController::class,'getSectionActivities1']);
 
 Route::get('/api/activities/{id}', [ActivityController::class, 'getActivityData']);
 
@@ -206,4 +208,9 @@ Route::get('/api/activities/{id}', [ActivityController::class, 'getActivityData'
 Route::post('/api/assessment/submit', [AssessmentController::class, 'submit']);
 
 Route::get('/api/parent/child/{childId}/activities-with-ratings', [ParentController::class, 'getChildActivitiesWithRatings']);
+
+Route::get('/api/teacher/report', [TeacherController::class, 'getTeacherReport']);
+
+
+//Route::get('/teacher', [TeacherController::class, 'index'])->name('teacher.dashboard');
 });

@@ -13,7 +13,7 @@
 
 /* BASE */
 body {
-    margin: 0;
+    margin: 50px;
     font-family: Arial, sans-serif;
     background: #f6f8fa;
 }
@@ -120,11 +120,31 @@ body {
         text-align: center;
     }
 }
+
+.back-btn {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background-color: #1E3A5F;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    z-index: 1000;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.back-btn:hover {
+    background-color: #FF6B35;
+}
 </style>
 </head>
 
 <body>
-
+<a href="{{ route('teacher') }}" class="back-btn">
+    ← Back to Dashboard
+</a>
 <main class="container">
 
     <!-- HERO -->
@@ -155,27 +175,36 @@ To achieve this, it needed to learn new skills, work  hard, and think creatively
 </main>
 
 <script>
-    const id = new URLSearchParams(window.location.search).get('activity');
-fetch(`/api/activities/${id}`)
 const sectionId = new URLSearchParams(window.location.search).get('section');
-console.log('Activity ID:', id);
+
 console.log('Section ID:', sectionId);
+
+
 async function loadActivities() {
+
     let response = await fetch(`/api/teacher/sections/${sectionId}/activities`);
+
     let activities = await response.json();
     
+    console.log(activities);
     let html = '';
 
     activities.forEach(activity => {
+
         html += `
         <div class="activity-card">
             <h3>${activity.title}</h3>
-            <button onclick="openActivity(${activity.id})">Open Activity</button>
+
+            <button onclick="openActivity(${activity.id})">
+                Open Activity
+            </button>
         </div>`;
     });
 
     document.getElementById('activitiesGrid').innerHTML = html;
 }
+
+
 
 function openActivity(activityId) {
      const sectionId = new URLSearchParams(window.location.search).get('section');

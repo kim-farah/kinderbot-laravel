@@ -27,4 +27,9 @@ class Student extends Model
     public function studentParents() {
         return $this->hasMany(StudentParent::class);
     }
+
+    public function sections()
+{
+    return $this->belongsToMany(Section::class, 'enrollments', 'student_id', 'section_id');
+}
 }

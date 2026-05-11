@@ -36,6 +36,8 @@
             height: 64px;
             flex-shrink: 0;
         }
+   
+
         .logo { font-size: 20px; font-weight: 600; }
         .user-info { display: flex; align-items: center; gap: 16px; }
         .logout-btn {
@@ -149,6 +151,7 @@
             justify-content: space-between;
             align-items: center;
         }
+        .activity-item h4{ color: var(--dark-blue); font-size: 16px; margin-bottom: 6px; margin-right: 20px;}
         .activity-info h4 { font-size: 18px; color: var(--dark-blue); margin-bottom: 6px; }
         .activity-meta { display: flex; gap: 16px; font-size: 13px; color: var(--gray); }
         .btn-start {
@@ -417,6 +420,132 @@ body.dark-mode .recipient-search-item:hover {
     border-radius: 18px;
     text-align: left;
 }
+
+.reports-grid {
+    display:flex;
+    gap: 20px;
+    padding: 20px;
+}
+
+.student-card {
+    background: white;
+    padding: 18px;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.activity-block {
+    margin-top: 12px;
+    padding: 12px;
+    background: #f7f9fc;
+    border-radius: 10px;
+
+}
+
+.activity-title {
+    font-size: 15px;
+    color: #2f6fed;
+    margin-bottom: 8px;
+    padding: 5px;
+}
+
+.assessment-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+    padding: 5px;
+}
+
+.assessment-item:last-child {
+    border-bottom: none;
+}
+
+.competency {
+    color: #555;
+    font-size: 13px;
+    padding: 5px;
+}
+
+.rating {
+    font-weight: bold;
+    font-size: 13px;
+    padding: 5px;
+}
+
+.student-name {
+    margin-bottom: 12px;
+    font-size: 18px;
+    color: #2c3e50;
+}
+
+.assessments {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+.top-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.activity {
+    background: #e8f0ff;
+    color: #2f6fed;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    gap: 10px;
+}
+
+.rating-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bar-bg {
+    width: 100px;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: #4caf50;
+    border-radius: 20px;
+    transition: width 0.3s ease;
+}
+
+.rating-text {
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+    padding: 5px;
+}
+.assessment-meta {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+    padding: 5px;
+}
+@media (min-width: 768px) {
+    .reports-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .reports-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
     </style>
 </head>
 <body>
@@ -452,10 +581,10 @@ body.dark-mode .recipient-search-item:hover {
                     <div class="teacher-greeting"><h1 id="greetingMessage">Welcome back! 👋</h1><p class="date" id="currentDate"></p></div>
                     <div class="section-header"><h2>My Classes</h2></div>
                     <div id="classesGrid" class="classes-grid"><div class="loading">Loading classes...</div></div>
-                    <div class="section-header"><h2>Today's Activities</h2></div>
-                    <div id="todayActivities" class="activities-list"><div class="loading">Loading activities...</div></div>
-                    <div class="section-header"><h2>Recent Assessments</h2><button class="btn-primary" id="quickAssessBtn">+ Quick Assessment</button></div>
-                    <div id="assessmentsTable" class="assessments-table"><div class="loading">Loading assessments...</div></div>
+                    <!-- <div class="section-header"><h2>Today's Activities</h2></div> -->
+                    <!-- <div id="todayActivities" class="activities-list"><div class="loading">Loading activities...</div></div>
+                    <div class="section-header"><h2>Recent Assessments</h2><button class="btn-primary" id="quickAssessBtn">+ Quick Assessment</button></div> -->
+                    <!-- <div id="assessmentsTable" class="assessments-table"><div class="loading">Loading assessments...</div></div> -->
                 </div>
                 <div id="myclassesPage" class="page-content"><div class="section-header"><h2>My Classes</h2></div><div id="myClassesTable" class="data-table"><div class="loading">Loading...</div></div></div>
                 <div id="activitiesPage" class="page-content">
@@ -466,7 +595,7 @@ body.dark-mode .recipient-search-item:hover {
         <div class="loading">Loading activities...</div>
     </div>
 </div>
-                <div id="reportsPage" class="page-content"><div class="section-header"><h2>Student Progress Reports</h2><button class="btn-primary" id="exportReportBtn">📊 Export Report</button></div><div id="reportsContainer" class="data-table"><div class="loading">Loading...</div></div></div>
+                <div id="reportsPage" class="page-content"><div class="section-header"><h2>Student Progress Reports</h2></div><div id="reportsContainer" class="reports-grid"><div class="loading">Loading...</div></div></div>
                 <div id="messagesPage" class="page-content"><div class="section-header"><h2>Messages</h2><button class="btn-primary" id="newMessageBtn">+ New Chat</button></div><div id="messagesContainer" class="data-table"><div class="loading">Loading...</div></div></div>
                 <div id="settingsPage" class="page-content">
                     <div class="section-header"><h2>Settings</h2></div>
@@ -611,15 +740,15 @@ body.dark-mode .recipient-search-item:hover {
             container.innerHTML = data.map(cls => `
                 <div class="class-card" >
                     <h3>${cls.name}</h3>
-                    <div class="class-stats"><p>👥 ${cls.students} students</p><p>🕒 ${cls.time || 'Schedule TBD'}</p></div>
-                    <div class="next-activity">Next: ${cls.nextActivity || 'No activities'}</div>
+                    <div class="class-stats"><p>👥 ${cls.students} students</p></div>
+                    <div class="next-activity">Number of activites: ${cls.activityCount || 'No activities'}</div>
                     <button class="btn-view" onclick="event.stopPropagation(); viewClassDetails(${JSON.stringify(cls).replace(/"/g, '&quot;')})">View Class</button>
                     <button class="btn-view" onclick="goToActivities(${cls.id})"> Activities </button>
                 </div>
             `).join('');
         }
 
-        async function loadTodayActivities() {
+        /*async function loadTodayActivities() {
             const container = document.getElementById('todayActivities');
             const data = await fetchAPI('/api/teacher/today-activities');
 
@@ -637,7 +766,7 @@ body.dark-mode .recipient-search-item:hover {
                     <button class="btn-start" onclick="startActivity('${a.title}', '${a.class}')">Start Activity</button>
                 </div>
             `).join('');
-        }
+        }*/
 
 
         async function loadTeacherActivitiesPage() {
@@ -659,14 +788,16 @@ body.dark-mode .recipient-search-item:hover {
         let html = '';
         activities.forEach(activity => {
             html += `
-                <div class="activity-item" onclick="window.location.href='/activities/${activity.id}'" style="cursor:pointer;">
+                <div class="activity-item" style="cursor:pointer;">
                     <div class="activity-info">
                         <h4>${activity.title}</h4>
+                       
                         <div class="activity-meta">
                             <span>📚 ${activity.class_name || 'Class'}</span>
                         </div>
+                       
                     </div>
-                    <button class="btn-start">View Activity</button>
+                      <h4>${activity.objective}</h4>
                 </div>
             `;
         });
@@ -680,7 +811,81 @@ body.dark-mode .recipient-search-item:hover {
         }
     }
 }
+async function loadReport() {
 
+    let response = await fetch('/api/teacher/report');
+    let data = await response.json();
+
+    // STEP 1: group by student
+    let grouped = {};
+
+    data.forEach(item => {
+
+        if (!grouped[item.student_name]) {
+            grouped[item.student_name] = {};
+        }
+
+        // STEP 2: inside student, group by activity
+        if (!grouped[item.student_name][item.activity_name]) {
+            grouped[item.student_name][item.activity_name] = [];
+        }
+
+        grouped[item.student_name][item.activity_name].push(item);
+    });
+
+    let html = '';
+
+    
+    Object.keys(grouped).forEach(student => {
+
+        html += `<div class="student-card">
+                    <h2>👨‍🎓 ${student}</h2>`;
+
+        Object.keys(grouped[student]).forEach(activity => {
+
+            html += `
+            <div class="activity-block">
+                <h3 class="activity-title">📘 ${activity}</h3>
+            `;
+
+            grouped[student][activity].forEach(a => {
+
+                html += `
+<div class="assessment-item">
+
+    <div class="assessment-top">
+        <span class="competency">🎯 ${a.competency_name}</span>
+
+
+    </div>
+
+    <div class="assessment-meta">
+        📅 ${new Date(a.created_at).toLocaleDateString()}
+    </div>
+
+    <div class="rating-bar">
+                <span class="rating">
+            ${a.rating}/4
+        </span>
+        <div class="bar-bg">
+            <div class="bar-fill" style="width: ${(a.rating / 4) * 100}%"></div>
+        </div>
+    </div>
+
+</div>
+                `;
+            });
+
+            html += `</div>`;
+        });
+
+        html += `</div>`;
+    });
+
+    document.getElementById('reportsContainer').innerHTML = html;
+}
+
+loadReport();
 
 // Call this when page loads
 //loadTeacherActivities();
@@ -761,7 +966,7 @@ body.dark-mode .recipient-search-item:hover {
             container.innerHTML = html;
         }
 
-        async function displayReports() {
+        /*async function displayReports() {
             const container = document.getElementById('reportsContainer');
             const data = await fetchAPI('/api/teacher/assessments');
 
@@ -782,7 +987,7 @@ body.dark-mode .recipient-search-item:hover {
             });
             html += '</tbody></table>';
             container.innerHTML = html;
-        }
+        }*/
 
 async function displayMessages() {
     const messages = await fetchAPI('/api/teacher/messages');
@@ -1023,7 +1228,7 @@ async function sendReply() {
             let studentsHtml = '<div class="student-list">';
             if (classData.studentsList && classData.studentsList.length > 0) {
                 classData.studentsList.forEach(s => {
-                    studentsHtml += `<div class="student-item"><span>👦 ${s}</span><button class="btn-small" onclick="quickAssessStudent('${s}')">Quick Assess</button></div>`;
+                    studentsHtml += `<div class="student-item"><span>👦 ${s}</span></div>`;
                 });
             } else {
                 studentsHtml += '<div class="student-item">No students enrolled</div>';
@@ -1033,8 +1238,6 @@ async function sendReply() {
             document.getElementById('classDetailsContent').innerHTML = `
                 <div class="class-detail"><strong>👩‍🏫 Teacher:</strong> ${classData.teacher || 'Not assigned'}</div>
                 <div class="class-detail"><strong>👥 Students:</strong> ${classData.students} students</div>
-                <div class="class-detail"><strong>🕒 Schedule:</strong> ${classData.time || 'Schedule TBD'}</div>
-                <div class="class-detail"><strong>📚 Next Activity:</strong> ${classData.nextActivity || 'No activities'}</div>
                 <div class="section-header" style="margin-top:20px;"><h3>Student List</h3></div>
                 ${studentsHtml}
             `;
@@ -1386,7 +1589,7 @@ async function updateTotalUnreadCount() {
 
                 if (pageName === 'myclasses') await displayMyClasses();
                 if (pageName === 'activities') await loadTeacherActivitiesPage();
-                if (pageName === 'reports') await displayReports();
+                if (pageName === 'reports') await loadTeacherDashboard();
                 if (pageName === 'messages') await displayMessages();
             });
         });

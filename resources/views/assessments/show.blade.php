@@ -258,8 +258,8 @@ body {
 <body>
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <header class="toolbar">
-<a class="btn">
-← Back to Activity
+<a href="{{ route('teacher') }}" class="btn">
+← Back to Dashboard
 </a>
 
 
@@ -302,7 +302,7 @@ const res = await fetch(`/api/assessment/${activityId}/${sectionId}`);
     `;
 
     competencies.forEach(c => {
-        html += `<th>${c.name}</th>`;
+        html += `<th>${c.description}</th>`;
     });
 
     html += `

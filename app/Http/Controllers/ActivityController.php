@@ -54,13 +54,13 @@ public function store(Request $request)
     if ($request->hasFile('resources')) {
         foreach ($request->file('resources') as $index => $file) {
             if ($file && $file->isValid()) {
-                $filename = time() . '_' . $index . '_' . $file->getClientOriginalName();
-                $file->storeAs('public/activities', $filename);
+                $filename = $file->getClientOriginalName();
+                $file->storeAs('public/resources', $filename);
 
                 DB::table('resources')->insert([
                     'activity_id' => $activityId,
                     'title' => $resourceTitles[$index] ?? 'Resource ' . ($index + 1),
-                    'file_path' => 'activities/' . $filename,
+                    'file_path' => 'resources/' . $filename,
                     'created_at' => now(),
                     //'updated_at' => now(),
                 ]);
@@ -77,9 +77,9 @@ public function store(Request $request)
         $imagePath = null;
 
         if (isset($stepImages[$index]) && $stepImages[$index]->isValid()) {
-            $filename = time() . '_step_' . $index . '_' . $stepImages[$index]->getClientOriginalName();
-            $stepImages[$index]->storeAs('public/activities', $filename);
-            $imagePath = 'activities/' . $filename;
+            $filename = $stepImages[$index]->getClientOriginalName();
+            $stepImages[$index]->storeAs('public/resources', $filename);
+            $imagePath = 'resources/' . $filename;
         }
 
         DB::table('activity_steps')->insert([
@@ -144,8 +144,12 @@ public function store(Request $request)
     return view('activities.show', compact('activity', 'resources', 'steps', 'competencies'));
 }
 */
+
+
+
+
 //new
-public function getActivityData(int $id)
+public function getActivityData1(int $id)
 {
     $activity = DB::table('activities')->where('id', $id)->first();
 
@@ -175,7 +179,7 @@ public function getActivityData(int $id)
         return Activity::where('class_id', $classId)->get();
     }
 
-       public function getSectionActivities($sectionId)
+ /*      public function getSectionActivities($sectionId)
 {
     return response()->json(
         DB::table('activities')
@@ -183,12 +187,31 @@ public function getActivityData(int $id)
             //->where('is_published', true)
             ->get()
     );
-}
+}*/
 
-/*public function getActivityData($id)
+public function getActivityData($id)
 {
     return response()->json(
         Activity::with(['resources','steps','animations'])->findOrFail($id)
     );
-}*/
+}
+
+public function getSectionActivities1($sectionId)
+{
+    // Find the section
+    $section = DB::table('sections')
+        ->where('id', $sectionId)
+        ->first();
+        
+    if (!$section) {
+        return response()->json([]);
+    }
+    
+    // Get activities for the class this section belongs to
+    $activities = DB::table('activities')
+        ->where('class_id', $section->class_id)
+        ->get();
+
+    return response()->json($activities);
+}
 }

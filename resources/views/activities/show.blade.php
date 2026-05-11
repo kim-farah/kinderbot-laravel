@@ -921,7 +921,7 @@ body {
 <body>
 <header class="toolbar">
 
-<a  class="btn back-btn">
+<a  class="btn back-btn" id="backBtn">
 ← Main Page
 </a>
 
@@ -1218,10 +1218,15 @@ document.addEventListener("DOMContentLoaded", () => {
    document.getElementById("assessmentBtn").href =
     `/activities/${activityId}/sections/${sectionId}/assessment`;
 
+    document.getElementById("backBtn").href=`/activities?section=${sectionId}`;
+
    console.log("activityId:", activityId);
    console.log("sectionId:", sectionId);
 
 });
+
+
+       
 /* DOWNLOAD FUNCTION */
     window.downloadImage = function () {
         const link = document.createElement("a");

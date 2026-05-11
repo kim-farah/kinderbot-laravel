@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Activity;
+
 
 class Competency extends Model
 {
@@ -15,4 +17,9 @@ class Competency extends Model
     public function assessments() {
         return $this->hasMany(Assessment::class);
     }
+
+    public function activity()
+{
+    return $this->belongsTo(Activity::class);
+}
 }

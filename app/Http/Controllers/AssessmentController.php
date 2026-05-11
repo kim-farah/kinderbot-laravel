@@ -32,7 +32,7 @@ class AssessmentController extends Controller
 
         $competencies = DB::table('competencies')
             ->where('activity_id', $activityId)
-            ->select('id', 'name')
+            ->select('id', 'description')
             ->get();
 
         return response()->json([

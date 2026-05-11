@@ -6,6 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\Section;
+use App\Models\User;
+use App\Models\Activity;
+use App\Models\Assessment;
+use App\Models\Competency;
+use App\Models\Teacher;
+use App\Models\Student;
+
 class TeacherController extends Controller
 {
     public function dashboard()
@@ -55,6 +63,10 @@ class TeacherController extends Controller
                 ->where('status', 'active')
                 ->count();
 
+            $activityCount = DB::table('activities')
+                ->where('class_id', $class->id)
+                ->count();
+
             // Get next activity (first published activity for this class)
             $nextActivity = DB::table('activities')
                 ->where('class_id', $section->class_id)
@@ -69,7 +81,8 @@ class TeacherController extends Controller
                 'nextActivity' => $nextActivity ? $nextActivity->title : 'No activities assigned',
                 'teacher' => $teacher->full_name,
                 'room' => 'Room ' . $section->id,
-                'studentsList' => $this->getStudentsInSection($section->id)
+                'studentsList' => $this->getStudentsInSection($section->id),
+                'activityCount' => $activityCount
             ];
         }
 
@@ -189,7 +202,7 @@ class TeacherController extends Controller
     // Get activities for those classes WITH the class name
     $activities = DB::table('activities')
         ->join('classes', 'activities.class_id', '=', 'classes.id')
-        ->select(['activities.*', 'classes.name as class_name'])
+        ->select(['activities.*', 'classes.name as class_name' ])
         ->whereIn('activities.class_id', $classIds)
         ->where('activities.is_published', true)
         ->orderBy('activities.created_at', 'desc')
@@ -199,7 +212,7 @@ class TeacherController extends Controller
 }
 
     // API: Get assessments for teacher's students
-    public function getAssessments()
+    /*public function getAssessments()
     {
         $userId = Auth::id();
         $teacher = DB::table('teachers')->where('user_id', $userId)->first();
@@ -242,7 +255,7 @@ class TeacherController extends Controller
         }
 
         return response()->json($result);
-    }
+    }*/
 
     // API: Save assessment
     public function storeAssessment(Request $request)
@@ -709,5 +722,50 @@ private function getUserType()
     if ($this instanceof CoordinatorController) return 'coordinator';
     if ($this instanceof TeacherController) return 'teacher';
     return 'parent';
+}
+
+public function getTeacherReport()
+{
+    $teacherId = Auth::user()->teacher->id;
+
+    $assessments = DB::table('assessments')
+        ->join('students', 'assessments.student_id', '=', 'students.id')
+        ->join('competencies', 'assessments.competency_id', '=', 'competencies.id')
+        ->join('activities', 'competencies.activity_id', '=', 'activities.id')
+        ->where('assessments.teacher_id', $teacherId)
+        ->select(
+            'assessments.rating',
+            'assessments.created_at',
+            'students.full_name as student_name',
+            'competencies.description as competency_name',
+            'activities.title as activity_name'
+        )
+        ->get();
+
+    return response()->json($assessments);
+}
+
+public function getSectionActivities($sectionId)
+{
+    // Find the section
+    $section = DB::table('sections')
+        ->where('id', $sectionId)
+        ->first();
+        
+    if (!$section) {
+        return response()->json([]);
+    }
+    
+    // Get activities for the class this section belongs to
+    $activities = DB::table('activities')
+        ->where('class_id', $section->class_id)
+        ->get();
+
+    return response()->json($activities);
+}
+
+public function index()
+{
+    return view('teacher');
 }
 }
