@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 12, 2026 at 04:01 PM
+-- Generation Time: May 12, 2026 at 05:02 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -258,7 +258,7 @@ CREATE TABLE `enrollments` (
   `section_id` bigint(20) UNSIGNED NOT NULL,
   `enrollment_date` date DEFAULT NULL,
   `status` varchar(255) NOT NULL DEFAULT 'active',
-  `notes` varchar(255) NOT NULL,
+  `notes` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -270,7 +270,8 @@ CREATE TABLE `enrollments` (
 INSERT INTO `enrollments` (`id`, `student_id`, `section_id`, `enrollment_date`, `status`, `notes`, `created_at`, `updated_at`) VALUES
 (2, 1, 1, '2026-04-23', 'active', '', '2026-04-23 15:47:40', NULL),
 (3, 2, 2, '2026-04-23', 'active', '', '2026-04-23 15:48:58', NULL),
-(4, 3, 3, '2026-04-23', 'active', '', '2026-04-23 15:49:31', NULL);
+(4, 3, 3, '2026-04-23', 'active', '', '2026-04-23 15:49:31', NULL),
+(5, 5, 1, '2026-05-12', 'active', NULL, '2026-05-12 14:30:22', NULL);
 
 -- --------------------------------------------------------
 
@@ -399,7 +400,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (28, '2026_04_28_165200_add_feedback_comment_to_activities_table', 3),
 (29, '2026_04_28_165903_add_is_published_to_activities_table', 4),
 (30, '2026_04_30_131257_rename_activity_columns', 5),
-(31, '2026_04_29_191835_add_deleted_at_to_messages_table', 6);
+(31, '2026_04_29_191835_add_deleted_at_to_messages_table', 6),
+(32, '2026_05_12_172336_modify_notes_nullable_in_enrollments_table', 7);
 
 -- --------------------------------------------------------
 
@@ -583,7 +585,8 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('mNhWmuvud4RyRno15WUnVFBISt8E3vjTxq0a3pn1', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiQ0hXcXJxcnZFdEkyTmdLZkd2QWptNmZzcHJhY1p3bnQ5a0tYUDNkSiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MzY6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hcGkvYWN0aXZpdGllcyI7czo1OiJyb3V0ZSI7Tjt9czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1778532224);
+('uqsyN92IjhRgJhPtiZFDexy6nSjL879D4Uqw6xy6', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.119.0 Chrome/142.0.7444.265 Electron/39.8.8 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiUlQ1dlNQdGVXOGFLNlVmMzVrMFpKa3ZqM1JUWk92eFdYVGhYd2t0OCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7czo1OiJyb3V0ZSI7czo1OiJsb2dpbiI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=', 1778594604),
+('XZ5le9RCdtXdVpEfEp2ZsPKNzfni5oZR3gvJo6o0', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0', 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiR2E0dk9rck1yWDlJYkZyNmdZNVo2RXh3WFdFbUMzYUFBVmt4TlU3dCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mzk6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hY3Rpdml0aWVzLzMvZWRpdCI7czo1OiJyb3V0ZSI7czoxNToiYWN0aXZpdGllcy5lZGl0Ijt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO2k6MTt9', 1778596257);
 
 -- --------------------------------------------------------
 
@@ -948,7 +951,7 @@ ALTER TABLE `competencies`
 -- AUTO_INCREMENT for table `enrollments`
 --
 ALTER TABLE `enrollments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `failed_jobs`
@@ -972,7 +975,7 @@ ALTER TABLE `messages`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- AUTO_INCREMENT for table `parents`

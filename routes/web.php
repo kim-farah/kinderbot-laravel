@@ -174,6 +174,7 @@ Route::get('/activities/{activity}/sections/{section}/assessment',
 
  //Route::get('/activities/{id}/assessment', [AssessmentController::class,'index']);
 
+ 
  Route::get('/api/activities/{id}/assessment', [AssessmentController::class,'getData']);
 
  Route::post('/api/assessment/submit', [AssessmentController::class,'submit']);
