@@ -921,13 +921,21 @@ body {
 <body>
 <header class="toolbar">
 
-<a  class="btn back-btn" id="backBtn">
-← Main Page
-</a>
+@if(auth()->check() && auth()->user()->role && auth()->user()->role->name === 'teacher')
+    <a class="btn back-btn" id="backBtn">
+        ← Main Page
+    </a>
 
-<a  id="assessmentBtn" class="btn assessment-btn">
-Go To Assessment →
-</a>
+    <a id="assessmentBtn" class="btn assessment-btn">
+        Go To Assessment →
+    </a>
+@endif
+
+@if(auth()->check() && auth()->user()->role && auth()->user()->role->name === 'coordinator')
+    <a href="{{ route('coordinator') }}" class="btn back-btn">
+        ← Back to Coordinator Page
+    </a>
+@endif
 
 </header>
 <section class="hero-strip">

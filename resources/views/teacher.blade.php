@@ -141,7 +141,18 @@
             margin-top: 8px;
         }
         .btn-view:hover { background: var(--orange); color: white; }
-        .activities-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .class-group {
+    margin-bottom: 30px;
+}
+
+.class-group h3 {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+}
+
+
+        .activities-list { display: flex; flex-direction: column; gap: 20px; justify-content: space-between; }
         .activity-item {
             background: var(--white);
             border: 1px solid var(--border-gray);
@@ -150,8 +161,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-left: 15px;
         }
-        .activity-item h4{ color: var(--dark-blue); font-size: 16px; margin-bottom: 6px; margin-right: 20px;}
+        .activity-item h4{ color: var(--dark-blue); font-size: 16px; margin-bottom: 20px; margin-right: 20px;}
         .activity-info h4 { font-size: 18px; color: var(--dark-blue); margin-bottom: 6px; }
         .activity-meta { display: flex; gap: 16px; font-size: 13px; color: var(--gray); }
         .btn-start {
@@ -769,13 +781,13 @@ body.dark-mode .recipient-search-item:hover {
         }*/
 
 
-        async function loadTeacherActivitiesPage() {
+async function loadTeacherActivitiesPage() {
     try {
         const response = await fetch('/api/teacher/activities', {
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
         });
-        const activities = await response.json();
 
+        const activities = await response.json();
         const container = document.getElementById('teacherActivitiesList');
 
         if (!container) return;
@@ -785,26 +797,53 @@ body.dark-mode .recipient-search-item:hover {
             return;
         }
 
+        // 1. GROUP BY CLASS
+        const grouped = activities.reduce((acc, activity) => {
+            const className = activity.class_name || 'Unknown Class';
+
+            if (!acc[className]) {
+                acc[className] = [];
+            }
+
+            acc[className].push(activity);
+            return acc;
+        }, {});
+
+        // 2. BUILD HTML
         let html = '';
-        activities.forEach(activity => {
+
+        Object.keys(grouped).forEach(className => {
             html += `
-                <div class="activity-item" style="cursor:pointer;">
-                    <div class="activity-info">
-                        <h4>${activity.title}</h4>
-                       
-                        <div class="activity-meta">
-                            <span>📚 ${activity.class_name || 'Class'}</span>
-                        </div>
-                       
-                    </div>
-                      <h4>${activity.objective}</h4>
-                </div>
+                <div class="class-group" style="margin-bottom:30px;">
+                    <h3 style="border-bottom:1px solid #ccc;padding-bottom:5px;">
+                        📚 ${className}
+                    </h3>
             `;
+
+            grouped[className].forEach(activity => {
+                html += `
+                    <div class="activity-item" style="cursor:pointer; margin-left:15px;">
+                        <div class="activity-info">
+                            <h4>${activity.title}</h4>
+
+                            <div class="activity-meta">
+                                <span>📚 ${activity.class_name}</span>
+                            </div>
+                        </div>
+
+                        <h4>${activity.objective}</h4>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
         });
+
         container.innerHTML = html;
 
     } catch (error) {
         console.error('Error loading activities:', error);
+
         const container = document.getElementById('teacherActivitiesList');
         if (container) {
             container.innerHTML = '<p style="text-align:center;padding:40px;">Error loading activities.</p>';

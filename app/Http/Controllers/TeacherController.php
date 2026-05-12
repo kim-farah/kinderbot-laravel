@@ -205,7 +205,7 @@ class TeacherController extends Controller
         ->select(['activities.*', 'classes.name as class_name' ])
         ->whereIn('activities.class_id', $classIds)
         ->where('activities.is_published', true)
-        ->orderBy('activities.created_at', 'desc')
+        ->orderBy('activities.title', 'asc')
         ->get();
 
     return response()->json($activities);
