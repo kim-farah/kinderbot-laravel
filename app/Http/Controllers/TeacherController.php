@@ -200,6 +200,8 @@ class TeacherController extends Controller
     }
 
     // Get activities for those classes WITH the class name
+
+    
     $activities = DB::table('activities')
         ->join('classes', 'activities.class_id', '=', 'classes.id')
         ->select(['activities.*', 'classes.name as class_name' ])
