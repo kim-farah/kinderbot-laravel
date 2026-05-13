@@ -1156,7 +1156,7 @@ function loadActivitiesTable() {
                 <td>${createdDate}</td>
                 <td>
                     <button class="btn-small" onclick="viewActivity(${a.id})">👁️ View</button>
-                    
+                    <button class="btn-small" onclick="editActivity(${a.id})">✏️ Edit</button>
                     <button class="btn-small btn-danger" onclick="deleteActivity(${a.id}, '${escapeHtml(a.title)}')">🗑️ Delete</button>
                 </td>
             </tr>`;
@@ -1166,7 +1166,7 @@ function loadActivitiesTable() {
         container.innerHTML = html;
     });
 }
-//<button class="btn-small" onclick="editActivity(${a.id})">✏️ Edit</button>
+
 
     function deleteActivity(id, title) { if (confirm(`Delete "${title}"?`)) { fetch(`/api/activities/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(r => r.json()).then(data => { if (data.success) { alert('✅ Deleted'); location.reload(); } }); } }
 
