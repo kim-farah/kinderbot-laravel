@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\UserCredentialsMail;
+
 class CoordinatorController extends Controller
 {
     public function dashboard()
@@ -358,15 +361,15 @@ private function calculateAgeOnDec31(?string $dateOfBirth)
         }
     }
 
-    public function storeTeacher(Request $request)
+public function storeTeacher(Request $request)
 {
     try {
         $plainPassword = $this->generateRandomPassword();
 
         $userId = DB::table('users')->insertGetId([
-            'email' => $request->email ?: strtolower(str_replace(' ', '.', $request->full_name)) . '@teacher.kinderbot.com',
+            'email' => $request->email,
             'password' => bcrypt($plainPassword),
-            'role_id' => 2,  // Teacher role
+            'role_id' => 2,
             'is_active' => true,
             'created_at' => now(),
             'updated_at' => now(),
@@ -381,17 +384,27 @@ private function calculateAgeOnDec31(?string $dateOfBirth)
             'updated_at' => now(),
         ]);
 
-        // Return the password so coordinator can see it
+        // Send email with credentials
+        $emailTo = $request->email;
+
+        Mail::to($emailTo)->send(new UserCredentialsMail(
+            $request->full_name,
+            $emailTo,
+            $plainPassword,
+            'Teacher'
+        ));
+
         return response()->json([
             'success' => true,
             'password' => $plainPassword,
-            'email' => $request->email ?: strtolower(str_replace(' ', '.', $request->full_name)) . '@teacher.kinderbot.com'
+            'email' => $emailTo,
+            'message' => 'Teacher created successfully! Credentials sent to email.'
         ]);
+
     } catch (\Exception $e) {
         return response()->json(['success' => false, 'message' => $e->getMessage()]);
     }
 }
-
     public function getTeachersList()
     {
         $teachers = DB::table('teachers')->select(['id', 'full_name'])->get();
@@ -435,7 +448,8 @@ private function calculateAgeOnDec31(?string $dateOfBirth)
         }
     }
 
-    public function storeParent(Request $request)
+
+public function storeParent(Request $request)
 {
     try {
         if (!$request->email) {
@@ -462,11 +476,21 @@ private function calculateAgeOnDec31(?string $dateOfBirth)
             'updated_at' => now(),
         ]);
 
+        // Send email with credentials
+        Mail::to($request->email)->send(new UserCredentialsMail(
+            $request->full_name,
+            $request->email,
+            $plainPassword,
+            'Parent'
+        ));
+
+        // Return success WITHOUT password
         return response()->json([
             'success' => true,
-            'password' => $plainPassword,
-            'email' => $request->email
+            'email' => $request->email,
+            'message' => '✅ Parent created successfully! Credentials have been sent to their email.'
         ]);
+
     } catch (\Exception $e) {
         return response()->json(['success' => false, 'message' => $e->getMessage()]);
     }
@@ -702,16 +726,16 @@ public function update(Request $request, int $id)
 
     // Update resources (images)
     $resourceTitles = ['Hero Image', 'Switch Image 1', 'Switch Image 2'];
-    
+
     if ($request->hasFile('resources')) {
         // Delete old resources
         DB::table('resources')->where('activity_id', $id)->delete();
-        
+
         foreach ($request->file('resources') as $index => $file) {
             if ($file && $file->isValid()) {
                 $filename = time() . '' . $index . '' . $file->getClientOriginalName();
                 $file->storeAs('public/activities', $filename);
-                
+
                 DB::table('resources')->insert([
                     'activity_id' => $id,
                     'title' => $resourceTitles[$index] ?? 'Resource ' . ($index + 1),
