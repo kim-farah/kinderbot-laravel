@@ -558,6 +558,73 @@ body.dark-mode .recipient-search-item:hover {
         grid-template-columns: repeat(3, 1fr);
     }
 }
+
+.student-title {
+    cursor: pointer;
+    user-select: none;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 10px;
+    background: #f1f5f9;
+    border-radius: 10px;
+
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.student-content {
+    padding-left: 10px;
+    margin-top: 10px;
+}
+
+.arrow {
+    font-size: 14px;
+}
+.class-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 25px;
+
+    /* visual depth */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+
+    /* layout */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    /* important for large data */
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1 1 350px; /* responsive cards */
+    max-width: 100%;
+}
+.class-card > .student-card {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 10px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#reportsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+}
+.class-card h1 {
+    font-size: 20px;
+    margin: 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
     </style>
 </head>
 <body>
@@ -855,67 +922,84 @@ async function loadReport() {
     let response = await fetch('/api/teacher/report');
     let data = await response.json();
 
-    // STEP 1: group by student
+    // STEP 1: group by class
     let grouped = {};
 
     data.forEach(item => {
 
-        if (!grouped[item.student_name]) {
-            grouped[item.student_name] = {};
+        if (!grouped[item.class_name]) {
+            grouped[item.class_name] = {};
         }
 
-        // STEP 2: inside student, group by activity
-        if (!grouped[item.student_name][item.activity_name]) {
-            grouped[item.student_name][item.activity_name] = [];
+        // STEP 2: inside class, group by student
+        if (!grouped[item.class_name][item.student_name]) {
+            grouped[item.class_name][item.student_name] = {};
         }
 
-        grouped[item.student_name][item.activity_name].push(item);
+        // STEP 3: inside student, group by activity
+        if (!grouped[item.class_name][item.student_name][item.activity_name]) {
+            grouped[item.class_name][item.student_name][item.activity_name] = [];
+        }
+
+        grouped[item.class_name][item.student_name][item.activity_name].push(item);
     });
 
     let html = '';
 
-    
-    Object.keys(grouped).forEach(student => {
+    Object.keys(grouped).forEach(className => {
 
-        html += `<div class="student-card">
-                    <h2>👨‍🎓 ${student}</h2>`;
+        html += `<div class="class-card">
+                    <h1>🏫 Class: ${className}</h1>`;
 
-        Object.keys(grouped[student]).forEach(activity => {
+        Object.keys(grouped[className]).forEach(student => {
 
             html += `
-            <div class="activity-block">
-                <h3 class="activity-title">📘 ${activity}</h3>
-            `;
+                <div class="student-card">
+                    <h2 class="student-title" onclick="toggleStudent(this)">
+                        👨‍🎓 ${student} <span class="arrow">▼</span>
+                    </h2>
 
-            grouped[student][activity].forEach(a => {
+                    <div class="student-content" style="display: none;">
+                `;
+
+            Object.keys(grouped[className][student]).forEach(activity => {
 
                 html += `
-<div class="assessment-item">
-
-    <div class="assessment-top">
-        <span class="competency">🎯 ${a.competency_name}</span>
-
-
-    </div>
-
-    <div class="assessment-meta">
-        📅 ${new Date(a.created_at).toLocaleDateString()}
-    </div>
-
-    <div class="rating-bar">
-                <span class="rating">
-            ${a.rating}/4
-        </span>
-        <div class="bar-bg">
-            <div class="bar-fill" style="width: ${(a.rating / 4) * 100}%"></div>
-        </div>
-    </div>
-
-</div>
+                <div class="activity-block">
+                    <h3 class="activity-title">📘 ${activity}</h3>
                 `;
+
+                grouped[className][student][activity].forEach(a => {
+
+                    html += `
+                <div class="assessment-item">
+
+                    <div class="assessment-top">
+                        <span class="competency">🎯 ${a.competency_name}</span>
+                    </div>
+
+                    <div class="assessment-meta">
+                        📅 ${new Date(a.created_at).toLocaleDateString()}
+                    </div>
+
+                    <div class="rating-bar">
+                        <span class="rating">
+                            ${a.rating}/4
+                        </span>
+                        <div class="bar-bg">
+                            <div class="bar-fill" style="width: ${(a.rating / 4) * 100}%"></div>
+                        </div>
+                    </div>
+
+                </div>
+                    `;
+                });
+
+                html += `</div>`;
             });
 
-            html += `</div>`;
+            html += `</div>
+            </div>`;
         });
 
         html += `</div>`;
@@ -925,6 +1009,20 @@ async function loadReport() {
 }
 
 loadReport();
+
+
+function toggleStudent(titleElement) {
+    const content = titleElement.nextElementSibling;
+    const arrow = titleElement.querySelector('.arrow');
+
+    if (content.style.display === "none") {
+        content.style.display = "block";
+        arrow.textContent = "▼";
+    } else {
+        content.style.display = "none";
+        arrow.textContent = "►";
+    }
+}
 
 // Call this when page loads
 //loadTeacherActivities();
@@ -1249,7 +1347,7 @@ async function sendReply() {
     const data = await response.json();
 
     if (data.success) {
-        alert('✅ Reply sent successfully!');
+        //alert('✅ Reply sent successfully!');
         document.getElementById('replyMessage').value = '';
         await loadConversation(currentConversationPartnerId);
         displayMessages();
@@ -1414,7 +1512,7 @@ function openMessageModal() {
     });
 
     if (result.success) {
-        alert('✅ Message sent successfully!');
+        //alert('✅ Message sent successfully!');
         closeMessageModal();
         displayMessages();
     } else {

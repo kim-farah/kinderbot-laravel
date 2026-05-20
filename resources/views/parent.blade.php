@@ -1349,7 +1349,7 @@ async function sendReply() {
     const data = await response.json();
 
     if (data.success) {
-        alert('✅ Reply sent successfully!');
+        //alert('✅ Reply sent successfully!');
         document.getElementById('replyMessage').value = '';
         await loadConversation(currentConversationPartnerId);
         displayMessages();
@@ -1430,7 +1430,7 @@ function closeFullMessageModal() {
 
     const data = await response.json();
     if (data.success) {
-        alert('✅ Message sent successfully!');
+        //alert('✅ Message sent successfully!');
         closeMessageModal();
         displayMessages();
     } else {

@@ -521,7 +521,7 @@ body {
 
 /* OPEN STATE */
 .materials-card.open .materials-list {
-    max-height: 400px;
+    max-height: 1000px;
     opacity: 1;
     margin-top: 12px;
      font-size: 25px;
@@ -1006,8 +1006,10 @@ Skills & Competencies
 
     <div class="materials-list">
         <ul>
-            @foreach(explode(',', $activity->materials) as $material)
-                <li>{{ trim($material) }}</li>
+           @foreach(preg_split('/\r\n|\r|\n/', $activity->materials) as $material)
+                @if(trim($material) != '')
+                    <li>{{ trim($material) }}</li>
+                @endif
             @endforeach
         </ul>
     </div>
@@ -1163,8 +1165,10 @@ document.addEventListener("DOMContentLoaded", () => {
             /* SKILLS */
             document.getElementById("skillsList").innerHTML =
                 (data.skills_competencies || "")
-                .split(",")
-                .map(skill => `<li>${skill.trim()}</li>`)
+                .split(/\r\n|\r|\n/)
+                .map(skill => skill.trim())
+                .filter(skill => skill !== "")
+                .map(skill => `<li>${skill}</li>`)
                 .join("");
 
             /* MAIN IMAGE (FIRST RESOURCE) */

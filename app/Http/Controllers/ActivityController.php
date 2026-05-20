@@ -203,13 +203,13 @@ public function update(Request $request, int $id)
         
         foreach ($request->file('resources') as $index => $file) {
             if ($file && $file->isValid()) {
-                $filename = time() . '' . $index . '' . $file->getClientOriginalName();
-                $file->storeAs('public/activities', $filename);
+                $filename = $file->getClientOriginalName();
+                $file->storeAs('public/resources', $filename);
                 
                 DB::table('resources')->insert([
                     'activity_id' => $id,
                     'title' => $resourceTitles[$index] ?? 'Resource ' . ($index + 1),
-                    'file_path' => 'activities/' . $filename,
+                    'file_path' => 'resources/' . $filename,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -226,9 +226,9 @@ public function update(Request $request, int $id)
         if (!empty(trim($description))) {
             $imagePath = null;
             if (isset($stepImages[$index]) && $stepImages[$index]->isValid()) {
-                $filename = time() . 'step' . $index . '_' . $stepImages[$index]->getClientOriginalName();
-                $stepImages[$index]->storeAs('public/activities', $filename);
-                $imagePath = 'activities/' . $filename;
+                $filename = $stepImages[$index]->getClientOriginalName();
+                $stepImages[$index]->storeAs('public/resources', $filename);
+                $imagePath = 'resources/' . $filename;
             }
             DB::table('activity_steps')->insert([
                 'activity_id' => $id,

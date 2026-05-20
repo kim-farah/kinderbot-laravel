@@ -726,14 +726,14 @@ public function getTeacherActivityLog()
 }
 
 
-    return view('coordinator-create', [
+  /*  return view('coordinator-create', [
         'activity' => $activity,
         'classes' => $classes,
         'resources' => $resources,
         'steps' => $steps,
         'is_edit' => true
     ]);
-}
+}*/
 
 public function update(Request $request, int $id)
 {

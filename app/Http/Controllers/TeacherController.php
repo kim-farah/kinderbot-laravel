@@ -742,7 +742,7 @@ public function getTeacherReport()
             'students.full_name as student_name',
             'competencies.description as competency_name',
             'activities.title as activity_name',
-            'classes.name as classes_name'
+            'classes.name as class_name'
 
         )
         ->get();

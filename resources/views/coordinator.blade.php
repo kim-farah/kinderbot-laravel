@@ -1990,7 +1990,7 @@ async function sendCoordinatorNewMessage() {
 
     const data = await response.json();
     if (data.success) {
-        alert('✅ Message sent successfully!');
+        //alert('✅ Message sent successfully!');
         closeCoordinatorNewMessageModal();
         displayCoordinatorMessages();
         openCoordinatorConversation(selectedCoordinatorRecipient.id, selectedCoordinatorRecipient.name, selectedCoordinatorRecipient.type);
