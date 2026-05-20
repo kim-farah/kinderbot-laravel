@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+
 class CoordinatorController extends Controller
 {
     public function dashboard()
@@ -22,6 +26,8 @@ class CoordinatorController extends Controller
             'teacherLog' => $teacherLog,
         ]);
     }
+
+
 
     // ==================== HELPER METHODS ====================
 /**
@@ -61,6 +67,56 @@ private function getSuggestedClassByAge(?int $age)
     }
 
     return DB::table('classes')->where('grade_level', $gradeLevel)->first();
+}
+
+private function sendCredentialsEmail(string $to, string  $name, string $password, string $role)
+{
+    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
+    try {
+        $mail->isSMTP();
+        $mail->Host       = env('MAIL_HOST');
+        $mail->SMTPAuth   = true;
+        $mail->Username   = env('MAIL_USERNAME');
+        $mail->Password   = env('MAIL_PASSWORD');
+        $mail->SMTPSecure = env('MAIL_ENCRYPTION', 'tls');
+        $mail->Port       = env('MAIL_PORT', 587);
+
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            ]
+        ];
+
+        $mail->setFrom(env('MAIL_FROM_ADDRESS', 'noreply@kinderbot.com'), 'Kinderbot System');
+        $mail->addAddress($to, $name);
+
+        $mail->isHTML(true);
+        $mail->Subject = 'Welcome to Kinderbot - Your Login Credentials';
+        $mail->Body    = "
+            <h2>Welcome to Kinderbot!</h2>
+            <p>Dear <strong>$name</strong>,</p>
+            <p>Your account has been created successfully. Below are your login credentials:</p>
+            <div style='background:#f0f0f0; padding:15px; border-radius:8px;'>
+                <p><strong>Email:</strong> $to</p>
+                <p><strong>Password:</strong> $password</p>
+                <p><strong>Role:</strong> $role</p>
+            </div>
+            <p><strong>⚠️ Important:</strong> Please change your password after your first login.</p>
+            <p><strong>Login URL:</strong> <a href='" . url('/login') . "'>" . url('/login') . "</a></p>
+        ";
+
+        $mail->AltBody = "Welcome to Kinderbot!\n\nDear $name,\n\nEmail: $to\nPassword: $password\nRole: $role\n\nLogin URL: " . url('/login');
+
+        $mail->send();
+        return true;
+
+    } catch (Exception $e) {
+        // Log is removed as requested
+        return false;
+    }
 }
 
     // ==================== STUDENT METHODS ====================
@@ -358,15 +414,24 @@ private function calculateAgeOnDec31(?string $dateOfBirth)
         }
     }
 
-    public function storeTeacher(Request $request)
+
+public function storeTeacher(Request $request)
 {
     try {
+        if (!$request->email) {
+            return response()->json(['success' => false, 'message' => 'Email is required']);
+        }
+
+        if (!$request->phone) {
+            return response()->json(['success' => false, 'message' => 'Phone is required']);
+        }
+
         $plainPassword = $this->generateRandomPassword();
 
         $userId = DB::table('users')->insertGetId([
-            'email' => $request->email ?: strtolower(str_replace(' ', '.', $request->full_name)) . '@teacher.kinderbot.com',
+            'email' => $request->email,
             'password' => bcrypt($plainPassword),
-            'role_id' => 2,  // Teacher role
+            'role_id' => 2,
             'is_active' => true,
             'created_at' => now(),
             'updated_at' => now(),
@@ -381,17 +446,18 @@ private function calculateAgeOnDec31(?string $dateOfBirth)
             'updated_at' => now(),
         ]);
 
-        // Return the password so coordinator can see it
+        $this->sendCredentialsEmail($request->email, $request->full_name, $plainPassword, 'Teacher');
+
         return response()->json([
             'success' => true,
-            'password' => $plainPassword,
-            'email' => $request->email ?: strtolower(str_replace(' ', '.', $request->full_name)) . '@teacher.kinderbot.com'
+            'email' => $request->email,
+            'message' => '✅ Teacher created successfully! Credentials sent to their email.'
         ]);
+
     } catch (\Exception $e) {
         return response()->json(['success' => false, 'message' => $e->getMessage()]);
     }
 }
-
     public function getTeachersList()
     {
         $teachers = DB::table('teachers')->select(['id', 'full_name'])->get();
@@ -435,12 +501,18 @@ private function calculateAgeOnDec31(?string $dateOfBirth)
         }
     }
 
-    public function storeParent(Request $request)
+
+public function storeParent(Request $request)
 {
     try {
         if (!$request->email) {
             return response()->json(['success' => false, 'message' => 'Email is required']);
         }
+
+        if (!$request->phone) {
+            return response()->json(['success' => false, 'message' => 'Phone is required']);
+        }
+
 
         $plainPassword = $this->generateRandomPassword();
 
@@ -457,16 +529,19 @@ private function calculateAgeOnDec31(?string $dateOfBirth)
             'user_id' => $userId,
             'full_name' => $request->full_name,
             'email' => $request->email,
-            'phone' => $request->phone,
+            'phone' => $request->phone?? null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
+        $this->sendCredentialsEmail($request->email, $request->full_name, $plainPassword, 'Parent');
+
         return response()->json([
             'success' => true,
-            'password' => $plainPassword,
-            'email' => $request->email
+            'email' => $request->email,
+            'message' => '✅ Parent created successfully! Credentials sent to their email.'
         ]);
+
     } catch (\Exception $e) {
         return response()->json(['success' => false, 'message' => $e->getMessage()]);
     }
@@ -651,6 +726,112 @@ public function getTeacherActivityLog()
 }
 
 
+    return view('coordinator-create', [
+        'activity' => $activity,
+        'classes' => $classes,
+        'resources' => $resources,
+        'steps' => $steps,
+        'is_edit' => true
+    ]);
+}
+
+public function update(Request $request, int $id)
+{
+    $request->validate([
+        'title' => 'required|string',
+        'class' => 'required|string',
+        'objective' => 'required|string',
+        'overview' => 'required|string',
+        'skills' => 'required|string',
+        'materials' => 'required|string',
+        'step_description' => 'required|array',
+        'step_description.*' => 'required|string',
+    ]);
+
+    // Get class_id
+    $class = DB::table('classes')->where('name', $request->class)->first();
+    if (!$class) {
+        return back()->withErrors(['class' => 'Class not found']);
+    }
+
+    // Update activity
+    DB::table('activities')->where('id', $id)->update([
+        'title' => $request->title,
+        'class_id' => $class->id,
+        'objective' => $request->objective,
+        'overview' => $request->overview,
+        'skills_competencies' => $request->skills,
+        'materials' => $request->materials,
+        'rodin_comment' => $request->rodin_comment,
+        'activity_comment' => $request->activity_comment,
+        'feedback_comment' => $request->feedback_comment,
+        'is_published' => $request->has('is_published'),
+        'updated_at' => now(),
+    ]);
+
+    // Update resources (images)
+    $resourceTitles = ['Hero Image', 'Switch Image 1', 'Switch Image 2'];
+
+    if ($request->hasFile('resources')) {
+        // Delete old resources
+        DB::table('resources')->where('activity_id', $id)->delete();
+
+        foreach ($request->file('resources') as $index => $file) {
+            if ($file && $file->isValid()) {
+                $filename = time() . '' . $index . '' . $file->getClientOriginalName();
+                $file->storeAs('public/activities', $filename);
+
+                DB::table('resources')->insert([
+                    'activity_id' => $id,
+                    'title' => $resourceTitles[$index] ?? 'Resource ' . ($index + 1),
+                    'file_path' => 'activities/' . $filename,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    // Update steps
+    DB::table('activity_steps')->where('activity_id', $id)->delete();
+    $stepDescriptions = $request->step_description;
+    $stepImages = $request->file('step_images') ?? [];
+
+    foreach ($stepDescriptions as $index => $description) {
+        if (!empty(trim($description))) {
+            $imagePath = null;
+            if (isset($stepImages[$index]) && $stepImages[$index]->isValid()) {
+                $filename = time() . 'step' . $index . '_' . $stepImages[$index]->getClientOriginalName();
+                $stepImages[$index]->storeAs('public/activities', $filename);
+                $imagePath = 'activities/' . $filename;
+            }
+            DB::table('activity_steps')->insert([
+                'activity_id' => $id,
+                'description' => $description,
+                'image_path' => $imagePath,
+                'order' => $index + 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    // Update competencies
+    DB::table('competencies')->where('activity_id', $id)->delete();
+    $skillNames = explode("\n", $request->skills);
+    foreach ($skillNames as $index => $skillName) {
+        $skillName = trim($skillName);
+        if (!empty($skillName)) {
+            DB::table('competencies')->insert([
+                'activity_id' => $id,
+                'name' => 'skill_' . ($index + 1),
+                'description' => $skillName,
+            ]);
+        }
+    }
+
+    return redirect()->route('coordinator')->with('success', 'Activity updated successfully!');
+}
 
 // ==================== COORDINATOR MESSAGING METHODS ====================
 

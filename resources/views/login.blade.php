@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kinderbot Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --dark-blue: #1E3A5F;
@@ -89,6 +90,25 @@
             font-size: 13px;
             margin-top: 10px;
         }
+        .password-wrapper {
+            position: relative;
+        }
+        .password-wrapper input {
+            width: 100%;
+            padding: 12px 40px 12px 14px;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: var(--gray);
+            font-size: 18px;
+        }
+        .toggle-password:hover {
+            color: var(--orange);
+        }
     </style>
 </head>
 <body>
@@ -96,45 +116,41 @@
         <h1>🤖 Kinderbot</h1>
         <h2>Welcome back!</h2>
 
-        <!--<form method="POST" action="{{ route('login.post') }}">
+        <form method="POST" action="{{ route('login.post') }}">
             @csrf
             <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" value="{{ old('email') }}" required>
+                <label>Email:</label>
+                <input type="email" name="email" class="form-input" autocomplete="username" required>
             </div>
-
             <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
+                <label>Password:</label>
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="password" class="form-input" autocomplete="current-password" required>
+                    <i id="togglePassword" class="fa-regular fa-eye toggle-password"></i>
+                </div>
             </div>
-
             <button type="submit" class="login-btn">Login</button>
-
             @if($errors->any())
                 <div class="error-message">
                     {{ $errors->first() }}
                 </div>
             @endif
-        </form>-->
+        </form>
+    </div>
 
-    <form method="POST" action="{{ route('login.post') }}">
-    @csrf
-    <div class="form-group">
-        <label>Email:</label>
-        <input type="email" name="email" class="form-input" autocomplete="username" required>
-    </div>
-    <div class="form-group">
-        <label>Password:</label>
-        <input type="password" name="password" class="form-input" autocomplete="current-password" required >
+    <script>
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
 
-    </div>
-    <button type="submit" class="login-btn">Login</button>
-    @if($errors->any())
-                <div class="error-message">
-                    {{ $errors->first() }}
-                </div>
-    @endif
-</form>
-    </div>
+        togglePassword.addEventListener('click', function() {
+            // Toggle the type attribute
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+
+            // Toggle the eye icon
+            this.classList.toggle('fa-eye');
+            this.classList.toggle('fa-eye-slash');
+        });
+    </script>
 </body>
 </html>

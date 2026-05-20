@@ -1357,23 +1357,29 @@ function viewActivity(id) {
         });
     }
 
+
     function addNewTeacher() {
-        const fullName = prompt('Enter teacher name:');
-        if (!fullName) return;
-        const email = prompt('Email (optional - leave empty to auto-generate):');
-        const phone = prompt('Phone (optional):');
-        fetch('/api/teachers/store', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-            body: JSON.stringify({ full_name: fullName, email: email || '', phone: phone || '' })
-        }).then(r => r.json()).then(data => {
-            if (data.success) {
-                alert(`✅ Teacher added successfully!\n\n📧 Email: ${data.email}\n🔑 Password: ${data.password}\n\n⚠️ Please share these credentials with the teacher.`);
-                loadTeachersTable();
-                loadTeachersForDashboard();
-            } else { alert('❌ Error: ' + data.message); }
-        });
-    }
+    const fullName = prompt('Enter teacher name:');
+    if (!fullName) return;
+    const email = prompt('Email (required - credentials will be sent here):');
+    if (!email) { alert('Email is required'); return; }
+    const phone = prompt('Phone (required):');
+    if (!phone) { alert('Phone is required'); return; }
+
+    fetch('/api/teachers/store', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ full_name: fullName, email: email, phone: phone || '' })
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            alert(`✅ Teacher added successfully!\n\n📧 Credentials sent to: ${data.email}\n\n⚠️ The teacher will receive their password via email.`);
+            loadTeachersTable();
+            loadTeachersForDashboard();
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    });
+}
 
     function editTeacher(id, currentName, currentEmail, currentPhone) {
         const newName = prompt('Edit name:', currentName);
@@ -1409,25 +1415,29 @@ function viewActivity(id) {
         });
     }
 
-    function addNewParent() {
-        const fullName = prompt('Enter parent name:');
-        if (!fullName) return;
-        const email = prompt('Email (required):');
-        if (!email) { alert('Email is required'); return; }
-        const phone = prompt('Phone (optional):');
-        fetch('/api/parents/store', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-            body: JSON.stringify({ full_name: fullName, email: email, phone: phone || '' })
-        }).then(r => r.json()).then(data => {
-            if (data.success) {
-                alert(`✅ Parent added successfully!\n\n📧 Email: ${data.email}\n🔑 Password: ${data.password}\n\n⚠️ Please share these credentials with the parent.`);
-                loadParentsTable();
-                loadParentsForDashboard();
-            } else { alert('❌ Error: ' + data.message); }
-        });
-    }
 
+function addNewParent() {
+    const fullName = prompt('Enter parent name:');
+    if (!fullName) return;
+    const email = prompt('Email (required - credentials will be sent here):');
+    if (!email) { alert('Email is required'); return; }
+    const phone = prompt('Phone (required):');
+    if (!phone) { alert('Phone is required'); return; }
+
+    fetch('/api/parents/store', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify({ full_name: fullName, email: email, phone: phone || '' })
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            alert(`✅ Parent added successfully!\n\n📧 Credentials sent to: ${data.email}\n\n⚠️ The parent will receive their password via email.`);
+            loadParentsTable();
+            loadParentsForDashboard();
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    });
+}
     function editParent(id, currentName, currentEmail, currentPhone) {
         const newName = prompt('Edit name:', currentName);
         if (!newName) return;
@@ -1781,7 +1791,7 @@ async function deleteMsg(messageId) {
     });
 
     if (response.ok) {
-        alert('✅ Message deleted');
+        //alert('✅ Message deleted');
         if (currentCoordinatorPartnerId) {
             await loadCoordinatorConversation(currentCoordinatorPartnerId);
         }
