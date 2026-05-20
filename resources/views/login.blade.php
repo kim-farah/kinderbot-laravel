@@ -125,7 +125,8 @@
     </div>
     <div class="form-group">
         <label>Password:</label>
-        <input type="password" name="password" class="form-input" autocomplete="current-password" required>
+        <input type="password" name="password" class="form-input" autocomplete="current-password" required >
+
     </div>
     <button type="submit" class="login-btn">Login</button>
     @if($errors->any())

@@ -782,7 +782,6 @@ body.dark-mode #newMessageModal textarea {
                     <div class="data-table">
                         <div class="settings-item"><div><strong>School Year</strong><div style="font-size:13px;">Current academic year</div></div><div><button class="btn-small" id="schoolYearBtn">2024-2025</button></div></div>
                         <div class="settings-item"><div><strong>System Theme</strong><div style="font-size:13px;">Light / Dark mode</div></div><div><button class="btn-small" id="themeBtn">Light</button></div></div>
-                        <div class="settings-item"><div><strong>Data Export</strong><div style="font-size:13px;">Export all data as JSON</div></div><div><button class="btn-small" id="exportBtn">Export</button></div></div>
                     </div>
                 </div>
             </div>
@@ -1589,7 +1588,7 @@ function viewActivity(id) {
         });
 
         if (result.success) {
-            alert('✅ Message sent successfully!');
+            //alert('✅ Message sent successfully!');
             closeCoordinatorMessageModal();
             displayCoordinatorMessages();
         } else {
@@ -1854,7 +1853,7 @@ async function deleteCoordinatorMessage(messageId) {
 
     const data = await response.json();
     if (data.success) {
-        alert('✅ Reply sent successfully!');
+       // alert('✅ Reply sent successfully!');
         document.getElementById('replyMessage').value = '';
         await loadCoordinatorConversation(currentCoordinatorPartnerId);
         displayCoordinatorMessages();

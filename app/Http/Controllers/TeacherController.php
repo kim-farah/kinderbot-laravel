@@ -734,13 +734,16 @@ public function getTeacherReport()
         ->join('students', 'assessments.student_id', '=', 'students.id')
         ->join('competencies', 'assessments.competency_id', '=', 'competencies.id')
         ->join('activities', 'competencies.activity_id', '=', 'activities.id')
+        ->join('classes', 'activities.class_id' , '=', 'classes.id')
         ->where('assessments.teacher_id', $teacherId)
         ->select(
             'assessments.rating',
             'assessments.created_at',
             'students.full_name as student_name',
             'competencies.description as competency_name',
-            'activities.title as activity_name'
+            'activities.title as activity_name',
+            'classes.name as classes_name'
+
         )
         ->get();
 

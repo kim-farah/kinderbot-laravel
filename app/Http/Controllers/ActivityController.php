@@ -144,7 +144,119 @@ public function store(Request $request)
     return view('activities.show', compact('activity', 'resources', 'steps', 'competencies'));
 }
 */
+public function edit(int $id)
+{
+    $activity = DB::table('activities')->where('id', $id)->first();
+    $classes = DB::table('classes')->get();
+    $resources = DB::table('resources')->where('activity_id', $id)->get();
+    $steps = DB::table('activity_steps')->where('activity_id', $id)->orderBy('order')->get();
 
+    return view('coordinator-create', [
+        'activity' => $activity,
+        'classes' => $classes,
+        'resources' => $resources,
+        'steps' => $steps,
+        'is_edit' => true
+    ]);
+}
+
+public function update(Request $request, int $id)
+{
+    $request->validate([
+        'title' => 'required|string',
+        'class' => 'required|string',
+        'objective' => 'required|string',
+        'overview' => 'required|string',
+        'skills' => 'required|string',
+        'materials' => 'required|string',
+        'step_description' => 'required|array',
+        'step_description.*' => 'required|string',
+    ]);
+
+    // Get class_id
+    $class = DB::table('classes')->where('name', $request->class)->first();
+    if (!$class) {
+        return back()->withErrors(['class' => 'Class not found']);
+    }
+
+    // Update activity
+    DB::table('activities')->where('id', $id)->update([
+        'title' => $request->title,
+        'class_id' => $class->id,
+        'objective' => $request->objective,
+        'overview' => $request->overview,
+        'skills_competencies' => $request->skills,
+        'materials' => $request->materials,
+        'rodin_comment' => $request->rodin_comment,
+        'activity_comment' => $request->activity_comment,
+        'feedback_comment' => $request->feedback_comment,
+        'is_published' => $request->has('is_published'),
+        'updated_at' => now(),
+    ]);
+
+    // Update resources (images)
+    $resourceTitles = ['Hero Image', 'Switch Image 1', 'Switch Image 2'];
+    
+    if ($request->hasFile('resources')) {
+        // Delete old resources
+        DB::table('resources')->where('activity_id', $id)->delete();
+        
+        foreach ($request->file('resources') as $index => $file) {
+            if ($file && $file->isValid()) {
+                $filename = time() . '' . $index . '' . $file->getClientOriginalName();
+                $file->storeAs('public/activities', $filename);
+                
+                DB::table('resources')->insert([
+                    'activity_id' => $id,
+                    'title' => $resourceTitles[$index] ?? 'Resource ' . ($index + 1),
+                    'file_path' => 'activities/' . $filename,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    // Update steps
+    DB::table('activity_steps')->where('activity_id', $id)->delete();
+    $stepDescriptions = $request->step_description;
+    $stepImages = $request->file('step_images') ?? [];
+
+    foreach ($stepDescriptions as $index => $description) {
+        if (!empty(trim($description))) {
+            $imagePath = null;
+            if (isset($stepImages[$index]) && $stepImages[$index]->isValid()) {
+                $filename = time() . 'step' . $index . '_' . $stepImages[$index]->getClientOriginalName();
+                $stepImages[$index]->storeAs('public/activities', $filename);
+                $imagePath = 'activities/' . $filename;
+            }
+            DB::table('activity_steps')->insert([
+                'activity_id' => $id,
+                'description' => $description,
+                'image_path' => $imagePath,
+                'order' => $index + 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    // Update competencies
+    DB::table('competencies')->where('activity_id', $id)->delete();
+    $skillNames = explode("\n", $request->skills);
+    foreach ($skillNames as $index => $skillName) {
+        $skillName = trim($skillName);
+        if (!empty($skillName)) {
+            DB::table('competencies')->insert([
+                'activity_id' => $id,
+                'name' => 'skill_' . ($index + 1),
+                'description' => $skillName,
+            ]);
+        }
+    }
+
+    return redirect()->route('coordinator')->with('success', 'Activity updated successfully!');
+}
 
 
 
