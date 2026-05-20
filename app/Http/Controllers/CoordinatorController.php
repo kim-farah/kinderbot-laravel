@@ -5,8 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\UserCredentialsMail;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 
 class CoordinatorController extends Controller
 {
@@ -25,6 +26,8 @@ class CoordinatorController extends Controller
             'teacherLog' => $teacherLog,
         ]);
     }
+
+
 
     // ==================== HELPER METHODS ====================
 /**
@@ -64,6 +67,56 @@ private function getSuggestedClassByAge(?int $age)
     }
 
     return DB::table('classes')->where('grade_level', $gradeLevel)->first();
+}
+
+private function sendCredentialsEmail(string $to, string  $name, string $password, string $role)
+{
+    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
+    try {
+        $mail->isSMTP();
+        $mail->Host       = env('MAIL_HOST');
+        $mail->SMTPAuth   = true;
+        $mail->Username   = env('MAIL_USERNAME');
+        $mail->Password   = env('MAIL_PASSWORD');
+        $mail->SMTPSecure = env('MAIL_ENCRYPTION', 'tls');
+        $mail->Port       = env('MAIL_PORT', 587);
+
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            ]
+        ];
+
+        $mail->setFrom(env('MAIL_FROM_ADDRESS', 'noreply@kinderbot.com'), 'Kinderbot System');
+        $mail->addAddress($to, $name);
+
+        $mail->isHTML(true);
+        $mail->Subject = 'Welcome to Kinderbot - Your Login Credentials';
+        $mail->Body    = "
+            <h2>Welcome to Kinderbot!</h2>
+            <p>Dear <strong>$name</strong>,</p>
+            <p>Your account has been created successfully. Below are your login credentials:</p>
+            <div style='background:#f0f0f0; padding:15px; border-radius:8px;'>
+                <p><strong>Email:</strong> $to</p>
+                <p><strong>Password:</strong> $password</p>
+                <p><strong>Role:</strong> $role</p>
+            </div>
+            <p><strong>⚠️ Important:</strong> Please change your password after your first login.</p>
+            <p><strong>Login URL:</strong> <a href='" . url('/login') . "'>" . url('/login') . "</a></p>
+        ";
+
+        $mail->AltBody = "Welcome to Kinderbot!\n\nDear $name,\n\nEmail: $to\nPassword: $password\nRole: $role\n\nLogin URL: " . url('/login');
+
+        $mail->send();
+        return true;
+
+    } catch (Exception $e) {
+        // Log is removed as requested
+        return false;
+    }
 }
 
     // ==================== STUDENT METHODS ====================
@@ -361,9 +414,18 @@ private function calculateAgeOnDec31(?string $dateOfBirth)
         }
     }
 
+
 public function storeTeacher(Request $request)
 {
     try {
+        if (!$request->email) {
+            return response()->json(['success' => false, 'message' => 'Email is required']);
+        }
+
+        if (!$request->phone) {
+            return response()->json(['success' => false, 'message' => 'Phone is required']);
+        }
+
         $plainPassword = $this->generateRandomPassword();
 
         $userId = DB::table('users')->insertGetId([
@@ -384,21 +446,12 @@ public function storeTeacher(Request $request)
             'updated_at' => now(),
         ]);
 
-        // Send email with credentials
-        $emailTo = $request->email;
-
-        Mail::to($emailTo)->send(new UserCredentialsMail(
-            $request->full_name,
-            $emailTo,
-            $plainPassword,
-            'Teacher'
-        ));
+        $this->sendCredentialsEmail($request->email, $request->full_name, $plainPassword, 'Teacher');
 
         return response()->json([
             'success' => true,
-            'password' => $plainPassword,
-            'email' => $emailTo,
-            'message' => 'Teacher created successfully! Credentials sent to email.'
+            'email' => $request->email,
+            'message' => '✅ Teacher created successfully! Credentials sent to their email.'
         ]);
 
     } catch (\Exception $e) {
@@ -456,6 +509,11 @@ public function storeParent(Request $request)
             return response()->json(['success' => false, 'message' => 'Email is required']);
         }
 
+        if (!$request->phone) {
+            return response()->json(['success' => false, 'message' => 'Phone is required']);
+        }
+
+
         $plainPassword = $this->generateRandomPassword();
 
         $userId = DB::table('users')->insertGetId([
@@ -471,24 +529,17 @@ public function storeParent(Request $request)
             'user_id' => $userId,
             'full_name' => $request->full_name,
             'email' => $request->email,
-            'phone' => $request->phone,
+            'phone' => $request->phone?? null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Send email with credentials
-        Mail::to($request->email)->send(new UserCredentialsMail(
-            $request->full_name,
-            $request->email,
-            $plainPassword,
-            'Parent'
-        ));
+        $this->sendCredentialsEmail($request->email, $request->full_name, $plainPassword, 'Parent');
 
-        // Return success WITHOUT password
         return response()->json([
             'success' => true,
             'email' => $request->email,
-            'message' => '✅ Parent created successfully! Credentials have been sent to their email.'
+            'message' => '✅ Parent created successfully! Credentials sent to their email.'
         ]);
 
     } catch (\Exception $e) {

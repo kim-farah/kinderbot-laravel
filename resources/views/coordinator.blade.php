@@ -1364,7 +1364,8 @@ function viewActivity(id) {
     if (!fullName) return;
     const email = prompt('Email (required - credentials will be sent here):');
     if (!email) { alert('Email is required'); return; }
-    const phone = prompt('Phone (optional):');
+    const phone = prompt('Phone (required):');
+    if (!phone) { alert('Phone is required'); return; }
 
     fetch('/api/teachers/store', {
         method: 'POST',
@@ -1421,7 +1422,8 @@ function addNewParent() {
     if (!fullName) return;
     const email = prompt('Email (required - credentials will be sent here):');
     if (!email) { alert('Email is required'); return; }
-    const phone = prompt('Phone (optional):');
+    const phone = prompt('Phone (required):');
+    if (!phone) { alert('Phone is required'); return; }
 
     fetch('/api/parents/store', {
         method: 'POST',
